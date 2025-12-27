@@ -11,7 +11,7 @@ const FabricCanvas = dynamic(() => import('@/components/editor/FabricCanvas'), {
 
 export default function Home() {
   return (
-    <main className="flex h-screen flex-row overflow-hidden bg-gray-50">
+    <main className="flex h-screen flex-row overflow-hidden bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
       <Sidebar />
       <div className="flex-1 relative overflow-hidden flex flex-col">
         {/* Header/Toolbar could go here */}

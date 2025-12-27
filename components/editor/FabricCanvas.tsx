@@ -464,7 +464,7 @@ export default function FabricCanvas() {
     return (
         <div
             ref={containerRef}
-            className="w-full h-full bg-gray-100 relative overflow-hidden flex flex-col outline-none"
+            className="w-full h-full bg-gray-100 dark:bg-gray-950 relative overflow-hidden flex flex-col outline-none transition-colors duration-200"
             tabIndex={0} // Allow div to receive focus
             onClick={() => containerRef.current?.focus()} // Ensure click focuses
         >
@@ -494,18 +494,18 @@ export default function FabricCanvas() {
             </div>
 
             {/* Floating Zoom Controls */}
-            <div className="absolute bottom-6 right-6 flex items-center gap-2 bg-white p-2 rounded-xl shadow-lg border border-gray-100 z-10">
-                <button onClick={zoomOut} className="p-2 hover:bg-gray-50 rounded-lg text-gray-600" title="Zoom Out">
+            <div className="absolute bottom-6 right-6 flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-10">
+                <button onClick={zoomOut} className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400" title="Zoom Out">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
                 </button>
-                <span className="text-xs font-mono font-medium text-gray-500 w-12 text-center">
+                <span className="text-xs font-mono font-medium text-gray-500 dark:text-gray-400 w-12 text-center">
                     {Math.round(zoom * 100)}%
                 </span>
-                <button onClick={zoomIn} className="p-2 hover:bg-gray-50 rounded-lg text-gray-600" title="Zoom In">
+                <button onClick={zoomIn} className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400" title="Zoom In">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
                 </button>
-                <div className="w-px h-4 bg-gray-200 mx-1"></div>
-                <button onClick={zoomFit} className="p-2 hover:bg-gray-50 rounded-lg text-gray-600" title="Fit to Screen">
+                <div className="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-1"></div>
+                <button onClick={zoomFit} className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400" title="Fit to Screen">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
                 </button>
             </div>

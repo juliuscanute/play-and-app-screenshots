@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
-import { Loader2, Sparkles, Download, Palette, Settings } from 'lucide-react';
+import { Loader2, Sparkles, Download, Palette, Settings, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Sidebar() {
     const { width, height, background, objects, addObject, setBackground, fabricCanvas, setSize } = useCanvasStore();
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const { theme, toggleTheme } = useTheme();
 
     const getStoreProxy = () => ({
         width, height, background, objects, id: 'current',
@@ -76,22 +78,30 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full shadow-xl z-20 font-sans">
-            <div className="p-6 border-b border-gray-100">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    AI Design Studio
-                </h1>
-                <p className="text-xs text-gray-400 mt-1">Powered by Gemini 2.0 Flash</p>
+        <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full shadow-xl z-20 font-sans transition-colors duration-200">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                <div>
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        AI Design
+                    </h1>
+                    <p className="text-xs text-gray-400 mt-1">Powered by Gemini 2.0</p>
+                </div>
+                <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+                >
+                    {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
             </div>
 
             <div className="p-4 flex-1 overflow-y-auto">
                 <div className="mb-8">
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-purple-500" />
                         Magic Edit
                     </label>
                     <textarea
-                        className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none bg-gray-50 mb-3 text-black placeholder-gray-400"
+                        className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none bg-gray-50 dark:bg-gray-800 mb-3 text-black dark:text-white placeholder-gray-400"
                         rows={4}
                         placeholder="e.g. 'Add a blue circle in the top right'"
                         value={prompt}
@@ -121,10 +131,10 @@ export default function Sidebar() {
                         Style Presets
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => handlePreset('dark_mode')} className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-xs text-gray-700 text-left">
+                        <button onClick={() => handlePreset('dark_mode')} className="p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 text-left">
                             🌑 Dark Mode
                         </button>
-                        <button onClick={() => handlePreset('vibrant')} className="p-2 border border-gray-200 rounded hover:bg-gray-50 text-xs text-gray-700 text-left">
+                        <button onClick={() => handlePreset('vibrant')} className="p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 text-left">
                             🔥 Vibrant
                         </button>
                     </div>
@@ -138,48 +148,48 @@ export default function Sidebar() {
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                         <div>
-                            <label className="text-xs text-gray-500 mb-1 block">Width</label>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Width</label>
                             <input
                                 type="number"
                                 value={width}
                                 onChange={(e) => setSize(Number(e.target.value), height)}
-                                className="w-full p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-gray-500 mb-1 block">Height</label>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Height</label>
                             <input
                                 type="number"
                                 value={height}
                                 onChange={(e) => setSize(width, Number(e.target.value))}
-                                className="w-full p-2 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button onClick={() => setSize(1080, 1920)} className="text-[10px] px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded border border-gray-200 truncate" title="Google Play Phone Portrait">
+                        <button onClick={() => setSize(1080, 1920)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Phone Portrait">
                             📱 Phone (P)
                         </button>
-                        <button onClick={() => setSize(1920, 1080)} className="text-[10px] px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded border border-gray-200 truncate" title="Google Play Phone Landscape">
+                        <button onClick={() => setSize(1920, 1080)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Phone Landscape">
                             📱 Phone (L)
                         </button>
-                        <button onClick={() => setSize(1200, 1920)} className="text-[10px] px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded border border-gray-200 truncate" title="Google Play Tablet 7in">
+                        <button onClick={() => setSize(1200, 1920)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Tablet 7in">
                             💻 Tablet 7"
                         </button>
-                        <button onClick={() => setSize(1600, 2560)} className="text-[10px] px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded border border-gray-200 truncate" title="Google Play Tablet 10in">
+                        <button onClick={() => setSize(1600, 2560)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Tablet 10in">
                             💻 Tablet 10"
                         </button>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-6">
+                <div className="border-t border-gray-100 dark:border-gray-800 pt-6">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 block">
                         Actions
                     </label>
 
                     <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Manage Objects</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manage Objects</label>
                         <button
                             onClick={() => {
                                 if (!fabricCanvas) return;
@@ -197,14 +207,14 @@ export default function Sidebar() {
                                     alert("Please select an object to delete.");
                                 }
                             }}
-                            className="w-full py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-2 mb-2"
+                            className="w-full py-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors flex items-center justify-center gap-2 mb-2"
                         >
                             Trash Selected
                         </button>
                     </div>
 
                     <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Upload Screenshot</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload Screenshot</label>
                         <input
                             type="file"
                             accept="image/*"
@@ -257,19 +267,21 @@ export default function Sidebar() {
                                     }, 100);
                                 }
                             }}
-                            className="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-xs file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100
-                            "
+
+                            className="block w-full text-sm text-gray-500 dark:text-gray-400
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-xs file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        dark:file:bg-blue-900/20 dark:file:text-blue-400
+                        hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40
+                        "
                         />
                     </div>
 
                     <button
                         onClick={handleExport}
-                        className="w-full py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 flex items-center justify-center gap-2"
+                        className="w-full py-2 bg-gray-900 dark:bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-900 flex items-center justify-center gap-2"
                     >
                         <Download className="w-4 h-4" />
                         Export High-Res PNG
