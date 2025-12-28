@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
-import { Loader2, Sparkles, Download, Palette, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Plus } from 'lucide-react';
+import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { v4 as uuidv4 } from 'uuid';
 import PropertyPanel from './PropertyPanel';
@@ -54,16 +54,7 @@ export default function Sidebar() {
         }
     };
 
-    const handlePreset = (preset: string) => {
-        const proxy = getStoreProxy() as any;
-        if (preset === 'dark_mode') {
-            executeToolCall('set_background', { type: 'solid', colors: ['#121212'] }, proxy);
-            executeToolCall('add_decorative_shape', { shape: 'circle', position: 'top_left', color: '#1E1E1E', size: 'large' }, proxy);
-        } else if (preset === 'vibrant') {
-            executeToolCall('set_background', { type: 'solid', colors: ['#FF5733'] }, proxy); // Fallback until gradients
-            executeToolCall('add_decorative_shape', { shape: 'circle', position: 'bottom_right', color: '#C70039', size: 'medium' }, proxy);
-        }
-    };
+
 
     const handleExport = () => {
         if (!fabricCanvas) return;
@@ -281,65 +272,133 @@ export default function Sidebar() {
                             <Smartphone className="w-5 h-5 text-gray-800 dark:text-gray-200" />
                             <span className="text-xs">Samsung S24</span>
                         </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'device_frame',
+                                    x: width / 2 - 258,
+                                    y: height / 2 - 344,
+                                    width: 516,
+                                    height: 688,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    deviceModel: 'ipad_pro_13',
+                                    frameColor: 'space_black'
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Tablet className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                            <span className="text-xs">iPad Pro 13"</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'device_frame',
+                                    x: width / 2 - 200,
+                                    y: height / 2 - 320,
+                                    width: 400,
+                                    height: 640,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    deviceModel: 'android_tablet',
+                                    frameColor: 'black'
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Tablet className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                            <span className="text-xs">Android Tab</span>
+                        </button>
                     </div>
+                    {/* End Insert Tools */}
                 </div>
 
-                {/* Presets */}
-                <div className="mb-8">
-                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 block flex items-center gap-2">
-                        <Palette className="w-3 h-3" />
-                        Style Presets
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => handlePreset('dark_mode')} className="p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 text-left">
-                            🌑 Dark Mode
-                        </button>
-                        <button onClick={() => handlePreset('vibrant')} className="p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 text-left">
-                            🔥 Vibrant
-                        </button>
-                    </div>
-                </div>
 
-                {/* Canvas Settings */}
+
+                {/* Canvas Size */}
                 <div className="mb-8">
                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 block flex items-center gap-2">
                         <Settings className="w-3 h-3" />
                         Canvas Size
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+
+                    {/* Manual Inputs */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
                         <div>
-                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Width</label>
+                            <label className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 block">Width</label>
                             <input
                                 type="number"
                                 value={width}
                                 onChange={(e) => setSize(Number(e.target.value), height)}
-                                className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Height</label>
+                            <label className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 block">Height</label>
                             <input
                                 type="number"
                                 value={height}
                                 onChange={(e) => setSize(width, Number(e.target.value))}
-                                className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button onClick={() => setSize(1080, 1920)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Phone Portrait">
-                            📱 Phone (P)
-                        </button>
-                        <button onClick={() => setSize(1920, 1080)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Phone Landscape">
-                            📱 Phone (L)
-                        </button>
-                        <button onClick={() => setSize(1200, 1920)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Tablet 7in">
-                            💻 Tablet 7"
-                        </button>
-                        <button onClick={() => setSize(1600, 2560)} className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded border border-gray-200 dark:border-gray-700 truncate" title="Google Play Tablet 10in">
-                            💻 Tablet 10"
-                        </button>
+                    <div className="space-y-4">
+                        {/* Android Section */}
+                        <div>
+                            <label className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-2 block flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                Android (Google Play)
+                            </label>
+                            <div className="grid grid-cols-1 gap-1.5">
+                                <button onClick={() => setSize(1080, 1920)} className="text-left px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md border border-gray-100 dark:border-gray-700 transition-colors group">
+                                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200">Phone Portrait</div>
+                                    <div className="text-[10px] text-gray-400 group-hover:text-gray-500">1080 x 1920</div>
+                                </button>
+                                <button onClick={() => setSize(1200, 1920)} className="text-left px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md border border-gray-100 dark:border-gray-700 transition-colors group">
+                                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200">Tablet 7"</div>
+                                    <div className="text-[10px] text-gray-400 group-hover:text-gray-500">1200 x 1920</div>
+                                </button>
+                                <button onClick={() => setSize(1600, 2560)} className="text-left px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md border border-gray-100 dark:border-gray-700 transition-colors group">
+                                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200">Tablet 10"</div>
+                                    <div className="text-[10px] text-gray-400 group-hover:text-gray-500">1600 x 2560</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* iOS Section */}
+                        <div>
+                            <label className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-2 block flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                iOS (App Store)
+                            </label>
+                            <div className="grid grid-cols-1 gap-1.5">
+                                <button onClick={() => setSize(1320, 2868)} className="text-left px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md border border-gray-100 dark:border-gray-700 transition-colors group">
+                                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200">iPhone 6.9" (16 Pro Max)</div>
+                                    <div className="text-[10px] text-gray-400 group-hover:text-gray-500">1320 x 2868</div>
+                                </button>
+                                <button onClick={() => setSize(1242, 2688)} className="text-left px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md border border-gray-100 dark:border-gray-700 transition-colors group">
+                                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200">iPhone 6.5" (11 Pro Max)</div>
+                                    <div className="text-[10px] text-gray-400 group-hover:text-gray-500">1242 x 2688</div>
+                                </button>
+                                <button onClick={() => setSize(2064, 2752)} className="text-left px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md border border-gray-100 dark:border-gray-700 transition-colors group">
+                                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200">iPad Pro 13" (M4)</div>
+                                    <div className="text-[10px] text-gray-400 group-hover:text-gray-500">2064 x 2752</div>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -348,96 +407,9 @@ export default function Sidebar() {
                         Actions
                     </label>
 
-                    <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manage Objects</label>
-                        <button
-                            onClick={() => {
-                                if (!fabricCanvas) return;
-                                const activeObj = fabricCanvas.getActiveObject();
-                                if (activeObj) {
-                                    // Remove from Store (which syncs to canvas)
-                                    // The ID is attached to the fabric object
-                                    const id = (activeObj as any).id;
-                                    if (id) {
-                                        useCanvasStore.getState().removeObject(id);
-                                        fabricCanvas.discardActiveObject();
-                                        fabricCanvas.requestRenderAll();
-                                    }
-                                } else {
-                                    alert("Please select an object to delete.");
-                                }
-                            }}
-                            className="w-full py-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors flex items-center justify-center gap-2 mb-2"
-                        >
-                            Trash Selected
-                        </button>
-                    </div>
 
-                    <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload Screenshot</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                const url = URL.createObjectURL(file);
 
-                                // Find or Create Device
-                                const updateDeviceSize = (deviceId: string, currentWidth: number) => {
-                                    const img = new Image();
-                                    img.onload = () => {
-                                        const aspect = img.naturalWidth / img.naturalHeight;
-                                        // Pixel 10 SVG has ~20px padding (stroke width 10 on each side)
-                                        // If we want the *Internal Image* to be aspect-correct, we need to match the internal dimensions.
-                                        // However, the "Device Frame" width in store allows for the whole object.
 
-                                        // Simple Bezel assumption:
-                                        const bezelX = 40; // Approx 20px each side safe buffer
-                                        const bezelY = 40;
-
-                                        // internalWidth = currentWidth - bezelX;
-                                        // targetInternalHeight = internalWidth / aspect;
-                                        // newHeight = targetInternalHeight + bezelY;
-
-                                        // Simplified: Just match aspect ratio on the whole frame for robustness
-                                        // If we want exact, we'd need to know exact SVG internal metrics.
-                                        const newHeight = currentWidth / aspect;
-
-                                        useCanvasStore.getState().updateObject(deviceId, {
-                                            screenshotImageId: url,
-                                            height: newHeight
-                                        } as any);
-                                    };
-                                    img.src = url;
-                                };
-
-                                const device = objects.find(o => o.type === 'device_frame');
-                                if (device) {
-                                    updateDeviceSize(device.id, device.width);
-                                } else {
-                                    // Create new
-                                    executeToolCall('configure_device', {}, useCanvasStore.getState() as any);
-                                    // Then update it
-                                    setTimeout(() => {
-                                        const newDevice = useCanvasStore.getState().objects.find(o => o.type === 'device_frame');
-                                        if (newDevice) {
-                                            updateDeviceSize(newDevice.id, newDevice.width);
-                                        }
-                                    }, 100);
-                                }
-                            }}
-
-                            className="block w-full text-sm text-gray-500 dark:text-gray-400
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-xs file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        dark:file:bg-blue-900/20 dark:file:text-blue-400
-                        hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40
-                        "
-                        />
-                    </div>
 
                     <button
                         onClick={handleExport}
