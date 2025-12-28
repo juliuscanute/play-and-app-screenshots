@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import { useCanvasStore } from '@/store/canvas-store';
-import { CanvasObject } from '@/types/canvas';
+import { CanvasObject, CanvasObjectType } from '@/types/canvas';
 import { createFabricObject } from '@/components/editor/utils/fabric-utils';
 
 import { useCanvasZoom } from '@/hooks/useCanvasZoom';
@@ -20,7 +20,7 @@ export default function FabricCanvas() {
     useEffect(() => {
         if (!canvasRef.current || fabricRef.current) return;
 
-        console.log("Initializing Fabric Canvas");
+        console.log("Effect: Initializing Fabric Canvas");
         const canvas = new fabric.Canvas(canvasRef.current, {
             width: width,
             height: height,
@@ -44,7 +44,7 @@ export default function FabricCanvas() {
                 opacity: target.opacity,
             };
 
-            if (target.type === 'textbox' || target.type === 'text') {
+            if (target.type === CanvasObjectType.Text) {
                 // For Text, we want to scale fontSize, not just width/height
                 // Fabric scales the object. We want to bake that scale into fontSize.
                 const scaleX = target.scaleX || 1;
@@ -61,13 +61,13 @@ export default function FabricCanvas() {
                 updates.height = (target.height || 0) * scaleY;
 
                 // We effectively reset scale for next render cycle via store update
-            } else if (target.type === 'circle') {
+            } else if (target.type === CanvasObjectType.Circle) {
                 // For circle, we want radius to absorb the scale
                 const scaleX = target.scaleX || 1;
                 // Assuming uniform scale for circle usually, or we take max
                 updates.width = (target.width || 0) * scaleX;
                 updates.height = (target.height || 0) * scaleX; // Keep it square/circular-ish logic
-            } else if (target.type === 'device_frame') {
+            } else if (target.type === CanvasObjectType.DeviceFrame) {
                 // Device frames are Groups. We track their bounding box.
                 // But typically we want to keep them as "scale" in store?
                 // No, our strict sync logic prefers w/h.
@@ -128,6 +128,7 @@ export default function FabricCanvas() {
 
     // Sync Store -> Canvas
     useEffect(() => {
+        console.log("Effect: Sync Store -> Canvas triggered", { width, height, background, objects });
         const canvas = fabricRef.current;
         if (!canvas) return;
 
@@ -166,7 +167,7 @@ export default function FabricCanvas() {
                     exists.moveTo(sortedObjects.indexOf(obj));
 
                     // CRITCAL UPDATE LOGIC: Reset Scale to 1 when applying dimensions
-                    if (obj.type === 'device_frame') {
+                    if (obj.type === CanvasObjectType.DeviceFrame) {
                         // DeviceFrame is special (Group). Re-creation logic handled separately or strict update
                         // ... (keep existing creation check logic)
                         const fabricObj = exists as any;
@@ -196,7 +197,7 @@ export default function FabricCanvas() {
                             });
                             exists.setCoords();
                         }
-                    } else if (obj.type === 'circle' && exists instanceof fabric.Circle) {
+                    } else if (obj.type === CanvasObjectType.Circle && exists instanceof fabric.Circle) {
                         exists.set({
                             radius: obj.width / 2,
                             left: obj.x,
@@ -208,7 +209,7 @@ export default function FabricCanvas() {
                             fill: typeof obj.fill === 'string' ? obj.fill : '#cccccc'
                         });
                         exists.setCoords();
-                    } else if (obj.type === 'text' && exists instanceof fabric.Textbox) {
+                    } else if (obj.type === CanvasObjectType.Text && exists instanceof fabric.Textbox) {
                         exists.set({
                             text: (obj as any).text,
                             width: obj.width, // Textbox width (wrapping)
@@ -241,7 +242,7 @@ export default function FabricCanvas() {
                             fill: typeof (obj as any).fill === 'string' ? (obj as any).fill : exists.fill
                         });
                         // Specific Rect props
-                        if (obj.type === 'rect' && exists instanceof fabric.Rect) {
+                        if (obj.type === CanvasObjectType.Rect && exists instanceof fabric.Rect) {
                             exists.set({
                                 rx: (obj as any).cornerRadius || 0,
                                 ry: (obj as any).cornerRadius || 0,

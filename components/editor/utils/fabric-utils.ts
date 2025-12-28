@@ -1,5 +1,5 @@
 import { fabric } from 'fabric';
-import { CanvasObject } from '@/types/canvas';
+import { CanvasObject, DeviceModel, CanvasObjectType } from '@/types/canvas';
 import { getDeviceFrameSVG } from '@/components/assets/frames';
 
 // Async Helper to map Store Objects to Fabric Objects
@@ -14,7 +14,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         opacity: obj.opacity,
     };
 
-    if (obj.type === 'rect') {
+    if (obj.type === CanvasObjectType.Rect) {
         return new fabric.Rect({
             ...commonProps,
             fill: typeof obj.fill === 'string' ? obj.fill : '#000000',
@@ -23,7 +23,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         });
     }
 
-    if (obj.type === 'circle') {
+    if (obj.type === CanvasObjectType.Circle) {
         return new fabric.Circle({
             ...commonProps,
             radius: obj.width / 2,
@@ -31,7 +31,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         });
     }
 
-    if (obj.type === 'text') {
+    if (obj.type === CanvasObjectType.Text) {
         return new fabric.Textbox((obj as any).text, {
             ...commonProps,
             fontFamily: (obj as any).fontFamily,
@@ -44,7 +44,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         });
     }
 
-    if (obj.type === 'path' && (obj as any).pathData) {
+    if (obj.type === CanvasObjectType.Path && (obj as any).pathData) {
         // EXCLUDE width/height from props so Fabric calculates them from pathData
         const { width, height, ...pathProps } = commonProps;
         const path = new fabric.Path((obj as any).pathData, {
@@ -71,7 +71,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
 
 
 
-    if (obj.type === 'device_frame') {
+    if (obj.type === CanvasObjectType.DeviceFrame) {
         const svgString = getDeviceFrameSVG((obj as any).deviceModel);
 
         return new Promise((resolve) => {
@@ -117,15 +117,15 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
 
                         // Determine padding based on device model
                         let screenPadding = 20; // Default (iPhone)
-                        const model = ((obj as any).deviceModel || '').toLowerCase();
+                        const model = (obj as any).deviceModel;
 
-                        if (model.includes('s24') || model.includes('galaxy') || model.includes('samsung')) {
+                        if (model === DeviceModel.SamsungS24 || model.includes('s24')) {
                             screenPadding = 10; // Thinner bezels for S24
-                        } else if (model.includes('pixel')) {
+                        } else if (model === DeviceModel.Pixel9 || model.includes('pixel')) {
                             screenPadding = 14;
-                        } else if (model.includes('ipad')) {
+                        } else if (model === DeviceModel.iPadPro13 || model.includes('ipad')) {
                             screenPadding = 30; // Thicker bezel for Tablet
-                        } else if (model.includes('tablet')) {
+                        } else if (model === DeviceModel.AndroidTablet || model.includes('tablet')) {
                             screenPadding = 30; // Thicker bezel for Tablet
                         } else {
                             screenPadding = 19; // iPhone
@@ -174,15 +174,15 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
                         // Determine radius based on device model
                         let clipRadius = 32;
                         // model variable already defined above
-                        if (model.includes('s24') || model.includes('galaxy') || model.includes('samsung')) {
+                        if (model === DeviceModel.SamsungS24 || model.includes('s24')) {
                             clipRadius = 10; // S24 has sharper corners (SVG rx=12)
-                        } else if (model.includes('pixel')) {
+                        } else if (model === DeviceModel.Pixel9 || model.includes('pixel')) {
                             clipRadius = 22; // Pixel 9 (SVG rx=24)
-                        } else if (model.includes('iphone')) {
+                        } else if (model === DeviceModel.iPhone16Pro || model.includes('iphone')) {
                             clipRadius = 46; // iPhone 16 (approx rx=55)
-                        } else if (model.includes('ipad')) {
+                        } else if (model === DeviceModel.iPadPro13 || model.includes('ipad')) {
                             clipRadius = 20; // iPad Pro (SVG rx=24)
-                        } else if (model.includes('tablet')) {
+                        } else if (model === DeviceModel.AndroidTablet || model.includes('tablet')) {
                             clipRadius = 16; // Android Tablet (SVG rx=20)
                         }
 

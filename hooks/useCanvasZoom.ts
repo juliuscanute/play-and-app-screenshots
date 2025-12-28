@@ -6,6 +6,7 @@ export const useCanvasZoom = (width: number, height: number) => {
 
     // Auto-fit on load/resize
     useEffect(() => {
+        console.log("Effect: Auto-fit Zoom triggered", { width, height });
         if (!containerRef.current) return;
         const fitZoom = () => {
             if (!containerRef.current) return;

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasStore } from '@/types/canvas';
-import { CanvasObject, DeviceFrameObject } from '@/types/canvas';
+import { CanvasObject, DeviceFrameObject, CanvasObjectType } from '@/types/canvas';
 
 const getPosition = (pos: string, width: number, height: number, objWidth: number, objHeight: number) => {
     switch (pos) {
@@ -49,7 +49,7 @@ export const executeToolCall = (
 
         const newShape: CanvasObject = {
             id: uuidv4(),
-            type: shape,
+            type: shape as (CanvasObjectType.Rect | CanvasObjectType.Circle),
             x: pos.x,
             y: pos.y,
             width: dimension,
@@ -58,7 +58,7 @@ export const executeToolCall = (
             rotation: 0,
             opacity: 0.8,
             zIndex: 0,
-            cornerRadius: shape === 'rect' ? 50 : 0
+            cornerRadius: shape === CanvasObjectType.Rect ? 50 : 0
         };
         store.addObject(newShape);
     }
@@ -71,7 +71,7 @@ export const executeToolCall = (
 
         const newText: CanvasObject = {
             id: uuidv4(),
-            type: 'text',
+            type: CanvasObjectType.Text,
             text: content,
             x: pos.x,
             y: pos.y,
@@ -92,7 +92,7 @@ export const executeToolCall = (
     if (toolName === 'configure_device') {
         // This usually modifies the existing device frame or adds one if missing
         // For MVP, if no device exists, we add one.
-        const existingDevice = store.objects.find(o => o.type === 'device_frame');
+        const existingDevice = store.objects.find(o => o.type === CanvasObjectType.DeviceFrame);
 
         const deviceWidth = 1000; // Approx for iPhone 15 Pro scaled
         const deviceHeight = 2000;
@@ -100,7 +100,7 @@ export const executeToolCall = (
         if (!existingDevice) {
             const newDevice: DeviceFrameObject = {
                 id: uuidv4(),
-                type: 'device_frame',
+                type: CanvasObjectType.DeviceFrame,
                 deviceModel: args.model || 'iphone_15_pro',
                 frameColor: 'black',
                 x: width / 2 - deviceWidth / 2,
@@ -138,7 +138,7 @@ export const executeToolCall = (
 
         const newPath: CanvasObject = {
             id: uuidv4(),
-            type: 'path',
+            type: CanvasObjectType.Path,
             pathData: pathData,
             x: pos.x,
             y: pos.y,

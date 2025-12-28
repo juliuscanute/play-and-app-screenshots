@@ -41,11 +41,14 @@ export const ANDROID_TABLET_SVG = `
 </svg>
 `;
 
-export const getDeviceFrameSVG = (model: string) => {
+import { DeviceModel } from '@/types/canvas';
+
+export const getDeviceFrameSVG = (model: DeviceModel | string) => {
+    // Keeping string for backward compat if needed, but preferring Enum
     const m = model?.toLowerCase() || '';
-    if (m.includes('pixel')) return PIXEL_9_SVG;
-    if (m.includes('samsung') || m.includes('galaxy')) return SAMSUNG_S24_SVG;
-    if (m.includes('ipad')) return IPAD_PRO_SVG;
-    if (m.includes('android_tablet') || m.includes('tablet')) return ANDROID_TABLET_SVG;
+    if (m === DeviceModel.Pixel9 || m.includes('pixel')) return PIXEL_9_SVG;
+    if (m === DeviceModel.SamsungS24 || m.includes('samsung') || m.includes('galaxy')) return SAMSUNG_S24_SVG;
+    if (m === DeviceModel.iPadPro13 || m.includes('ipad')) return IPAD_PRO_SVG;
+    if (m === DeviceModel.AndroidTablet || m.includes('android_tablet') || m.includes('tablet')) return ANDROID_TABLET_SVG;
     return IPHONE_16_PRO_SVG;
 };

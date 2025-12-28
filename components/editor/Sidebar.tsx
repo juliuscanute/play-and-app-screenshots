@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
+import { DeviceModel, CanvasObjectType } from '@/types/canvas';
 import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { v4 as uuidv4 } from 'uuid';
@@ -131,7 +132,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'rect',
+                                    type: CanvasObjectType.Rect,
                                     x: width / 2 - 50,
                                     y: height / 2 - 50,
                                     width: 100,
@@ -155,7 +156,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'circle',
+                                    type: CanvasObjectType.Circle,
                                     x: width / 2 - 50,
                                     y: height / 2 - 50,
                                     width: 100,
@@ -178,7 +179,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'text',
+                                    type: CanvasObjectType.Text,
                                     x: width / 2 - 100,
                                     y: height / 2 - 20,
                                     width: 200,
@@ -206,7 +207,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'device_frame',
+                                    type: CanvasObjectType.DeviceFrame,
                                     x: width / 2 - 216,
                                     y: height / 2 - 466,
                                     width: 433,
@@ -214,7 +215,7 @@ export default function Sidebar() {
                                     rotation: 0,
                                     opacity: 1,
                                     zIndex: objects.length + 1,
-                                    deviceModel: 'iphone_16_pro',
+                                    deviceModel: DeviceModel.iPhone16Pro,
                                     frameColor: 'titanium'
                                 } as any);
                                 selectObject(id);
@@ -230,7 +231,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'device_frame',
+                                    type: CanvasObjectType.DeviceFrame,
                                     x: width / 2 - 206,
                                     y: height / 2 - 457,
                                     width: 412,
@@ -238,7 +239,7 @@ export default function Sidebar() {
                                     rotation: 0,
                                     opacity: 1,
                                     zIndex: objects.length + 1,
-                                    deviceModel: 'pixel_9',
+                                    deviceModel: DeviceModel.Pixel9,
                                     frameColor: 'obsidian'
                                 } as any);
                                 selectObject(id);
@@ -254,7 +255,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'device_frame',
+                                    type: CanvasObjectType.DeviceFrame,
                                     x: width / 2 - 206,
                                     y: height / 2 - 446,
                                     width: 412,
@@ -262,7 +263,7 @@ export default function Sidebar() {
                                     rotation: 0,
                                     opacity: 1,
                                     zIndex: objects.length + 1,
-                                    deviceModel: 'samsung_s24',
+                                    deviceModel: DeviceModel.SamsungS24,
                                     frameColor: 'titanium_gray'
                                 } as any);
                                 selectObject(id);
@@ -278,7 +279,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'device_frame',
+                                    type: CanvasObjectType.DeviceFrame,
                                     x: width / 2 - 258,
                                     y: height / 2 - 344,
                                     width: 516,
@@ -286,7 +287,7 @@ export default function Sidebar() {
                                     rotation: 0,
                                     opacity: 1,
                                     zIndex: objects.length + 1,
-                                    deviceModel: 'ipad_pro_13',
+                                    deviceModel: DeviceModel.iPadPro13,
                                     frameColor: 'space_black'
                                 } as any);
                                 selectObject(id);
@@ -302,7 +303,7 @@ export default function Sidebar() {
                                 const id = uuidv4();
                                 addObject({
                                     id,
-                                    type: 'device_frame',
+                                    type: CanvasObjectType.DeviceFrame,
                                     x: width / 2 - 200,
                                     y: height / 2 - 320,
                                     width: 400,
@@ -310,7 +311,7 @@ export default function Sidebar() {
                                     rotation: 0,
                                     opacity: 1,
                                     zIndex: objects.length + 1,
-                                    deviceModel: 'android_tablet',
+                                    deviceModel: DeviceModel.AndroidTablet,
                                     frameColor: 'black'
                                 } as any);
                                 selectObject(id);

@@ -1,8 +1,17 @@
-export type ShapeType = 'rect' | 'circle' | 'text' | 'image' | 'path' | 'device_frame';
+export enum CanvasObjectType {
+    Rect = 'rect',
+    Circle = 'circle',
+    Text = 'text',
+    Image = 'image',
+    Path = 'path',
+    DeviceFrame = 'device_frame'
+}
+
+export type ShapeType = CanvasObjectType; // Backward compat alias if needed, or just replace usages.
 
 export interface BaseObject {
     id: string;
-    type: ShapeType;
+    type: CanvasObjectType;
     x: number;
     y: number;
     width: number;
@@ -14,12 +23,12 @@ export interface BaseObject {
 }
 
 export interface ShapeObject extends BaseObject {
-    type: 'rect' | 'circle';
+    type: CanvasObjectType.Rect | CanvasObjectType.Circle;
     cornerRadius?: number;
 }
 
 export interface TextObject extends BaseObject {
-    type: 'text';
+    type: CanvasObjectType.Text;
     text: string;
     fontFamily: string;
     fontSize: number;
@@ -30,18 +39,26 @@ export interface TextObject extends BaseObject {
 }
 
 export interface ImageObject extends BaseObject {
-    type: 'image';
+    type: CanvasObjectType.Image;
     src: string;
 }
 
 export interface PathObject extends BaseObject {
-    type: 'path';
+    type: CanvasObjectType.Path;
     pathData: string;
 }
 
+export enum DeviceModel {
+    iPhone16Pro = 'iphone_16_pro',
+    Pixel9 = 'pixel_9',
+    SamsungS24 = 'samsung_s24',
+    iPadPro13 = 'ipad_pro_13',
+    AndroidTablet = 'android_tablet'
+}
+
 export interface DeviceFrameObject extends BaseObject {
-    type: 'device_frame';
-    deviceModel: string;
+    type: CanvasObjectType.DeviceFrame;
+    deviceModel: DeviceModel;
     frameColor: string;
     screenshotImageId?: string | null;
     tilt?: {
