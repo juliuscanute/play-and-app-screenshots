@@ -14,6 +14,8 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         opacity: obj.opacity,
     };
 
+    const { width, height, ...restProps } = commonProps;
+
     if (obj.type === CanvasObjectType.Rect) {
         return new fabric.Rect({
             ...commonProps,
@@ -25,7 +27,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
 
     if (obj.type === CanvasObjectType.Circle) {
         return new fabric.Circle({
-            ...commonProps,
+            ...restProps, // Exclude width/height, rely on radius
             radius: obj.width / 2,
             fill: typeof obj.fill === 'string' ? obj.fill : '#cccccc',
         });
@@ -64,7 +66,7 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         }
 
         return new fabric.Polygon(points, {
-            ...commonProps,
+            ...restProps, // Exclude width/height, rely on points
             fill: typeof obj.fill === 'string' ? obj.fill : '#10B981',
             originX: 'center',
             originY: 'center',
@@ -165,8 +167,9 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
                         if (!img) {
                             console.error("   [createFabricObject] Failed to load image!");
                             // Fallback: Just return frame
+                            const { width, height, ...restProps } = commonProps;
                             frameGroup.set({
-                                ...commonProps,
+                                ...restProps,
                                 scaleX: obj.width / (frameGroup.width || 1),
                                 scaleY: obj.height / (frameGroup.height || 1),
                             });

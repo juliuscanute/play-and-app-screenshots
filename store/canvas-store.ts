@@ -21,6 +21,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     activeCanvasId: 'default',
     selectedObjectId: null,
     fabricCanvas: null,
+    clipboard: null,
 
 
     // Canvas Management
@@ -181,5 +182,44 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                 c.id === id ? { ...c, name } : c
             )
         }));
+    },
+
+    copyObject: () => {
+        set((state) => {
+            const { selectedObjectId, canvases, activeCanvasId } = state;
+            if (!selectedObjectId) return state;
+
+            const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+            if (!activeCanvas) return state;
+
+            const objectToCopy = activeCanvas.objects.find(o => o.id === selectedObjectId);
+            if (!objectToCopy) return state;
+
+            return { clipboard: JSON.parse(JSON.stringify(objectToCopy)) };
+        });
+    },
+
+    pasteObject: () => {
+        set((state) => {
+            const { clipboard, canvases, activeCanvasId } = state;
+            if (!clipboard) return state;
+
+            const newId = uuidv4();
+            const newObject = {
+                ...clipboard,
+                id: newId,
+                x: clipboard.x + 20,
+                y: clipboard.y + 20,
+                // Ensure zIndex is top? Or just append to list which usually renders last (top)
+                // We'll let zIndex be handled if needed, or just append.
+            };
+
+            return {
+                canvases: canvases.map(c =>
+                    c.id === activeCanvasId ? { ...c, objects: [...c.objects, newObject] } : c
+                ),
+                selectedObjectId: newId
+            };
+        });
     }
 }));

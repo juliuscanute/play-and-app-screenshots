@@ -12,7 +12,7 @@ export default function FabricCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<fabric.Canvas | null>(null);
 
-    const { canvases, activeCanvasId, updateObject, setFabricCanvas, selectObject } = useCanvasStore();
+    const { canvases, activeCanvasId, updateObject, removeObject, copyObject, pasteObject, setFabricCanvas, selectObject } = useCanvasStore();
 
     // Resolve Active Canvas
     const activeCanvas = canvases.find(c => c.id === activeCanvasId);
@@ -47,6 +47,68 @@ export default function FabricCanvas() {
             if (!target) return;
 
             console.log("Event: object:modified", { type: target.type, id: (target as any).id });
+
+            if (target.type === 'activeSelection') {
+                // Handle Group Selection Modification
+                // We need to "bake" the group transform into individual objects to get absolute coords
+                const activeSel = target as fabric.ActiveSelection;
+                const _objects = activeSel.getObjects();
+
+                // 1. Discard active object to force Fabric to apply group transforms to objects
+                // We suppress standard events to verify if that helps, but typically we want to update store.
+                // However, we need to restore selection later.
+                canvas.discardActiveObject();
+
+                // 2. Iterate and update store
+                _objects.forEach((obj: any) => {
+                    const id = obj.id;
+                    if (!id) return;
+
+                    console.log(`ModGroup: Processing ${obj.type} id=${obj.id} W=${obj.width} Scale=${obj.scaleX}`);
+
+                    // Fabric has now updated obj.left/top/scale/angle to absolute values
+                    const updates: Partial<CanvasObject> = {
+                        x: obj.left,
+                        y: obj.top,
+                        rotation: obj.angle,
+                        opacity: obj.opacity,
+                    };
+
+                    // Handle specific type scaling
+                    // Logic mirrored from single-object update, but since we discarded group, 
+                    // obj.scaleX/Y are now set correctly relative to canvas.
+                    if (obj.type === CanvasObjectType.Text) {
+                        const scaleX = obj.scaleX || 1;
+                        const scaleY = obj.scaleY || 1;
+                        const currentFontSize = (obj as fabric.Textbox).fontSize || 16;
+                        const currentWidth = obj.width || 0;
+                        (updates as any).fontSize = currentFontSize * scaleY;
+                        updates.width = currentWidth * scaleX;
+                        // Reset scale in next sync usually, but for now we just save the baked values
+                    } else if (obj.deviceModel || obj.type === CanvasObjectType.DeviceFrame) {
+                        // DeviceFrame (Group)
+                        // Width = Native * Scale
+                        updates.width = (obj.width || 0) * (obj.scaleX || 1);
+                        updates.height = (obj.height || 0) * (obj.scaleY || 1);
+                    } else {
+                        // Rect, Image, Circle, Path
+                        // We just take width * scale.
+                        updates.width = (obj.width || 0) * (obj.scaleX || 1);
+                        updates.height = (obj.height || 0) * (obj.scaleY || 1);
+                    }
+
+                    updateObject(id, updates);
+                });
+
+                // 3. Restore Selection
+                // We need to create a new selection because the old one is destroyed/invalidated
+                const newSel = new fabric.ActiveSelection(_objects, {
+                    canvas: canvas,
+                });
+                canvas.setActiveObject(newSel);
+                canvas.requestRenderAll();
+                return;
+            }
 
             const updates: Partial<CanvasObject> = {
                 x: target.left,
@@ -118,26 +180,8 @@ export default function FabricCanvas() {
             selectObject(null);
         });
 
-        const handleKeyWrapper = (e: KeyboardEvent) => {
-            // We can invoke specific store actions or canvas actions here
-            if (e.key === 'Backspace' || e.key === 'Delete') {
-                // Check if we have an active selection
-                const active = canvas.getActiveObject();
-                if (active) {
-                    // We need to remove via store to keep sync
-                    // We can't access 'removeObject' from store here directly via closure cleanly 
-                    // unless we added it to dependency array, which triggers re-init.
-                    // Better to rely on a global or context listener, or just let the store handle it?
-                    // For now, let's leave keyboard handling to a separate effect or the container.
-                }
-            }
-        }
-
-        window.addEventListener('keydown', handleKeyWrapper);
-
         return () => {
             console.log("Disposing Fabric Canvas");
-            window.removeEventListener('keydown', handleKeyWrapper);
             canvas.dispose();
             fabricRef.current = null;
             setFabricCanvas(null);
@@ -192,7 +236,8 @@ export default function FabricCanvas() {
                     if (obj.type === CanvasObjectType.DeviceFrame) {
                         const fabricObj = exists as any;
                         console.log(`Sync: [DeviceFrame] id=${obj.id} model=${fabricObj.deviceModel}`);
-                        console.log(`Sync: [DeviceFrame] current: origin=${exists.originX}/${exists.originY} w=${exists.width} h=${exists.height} scale=${exists.scaleX}`);
+                        const nativeWidth = exists.width || 1;
+                        console.log(`Sync: [DeviceFrame] current: nativeW=${nativeWidth} storeW=${obj.width} calcScale=${obj.width / nativeWidth}`);
                         // DeviceFrame is special (Group). Re-creation logic handled separately or strict update
                         // ... (keep existing creation check logic)
 
@@ -255,8 +300,32 @@ export default function FabricCanvas() {
                             textAlign: (obj as any).textAlign
                         });
                         exists.setCoords();
+                    } else if (obj.type === CanvasObjectType.Path) {
+                        // Vector Path logic (Fix for shrinking bug)
+                        // Paths don't respond to width/height directly in Fabric for scaling.
+                        // We must use scaleX/scaleY.
+                        // Fabric stores 'width'/'height' as the bounding box of the unscaled path.
+
+                        // NOTE: exists.width is the UN-SCALED width (native).
+                        // If we want the object to be 'obj.width' pixels wide, we calculate scale.
+
+                        const nativeWidth = exists.width || 1;
+                        const nativeHeight = exists.height || 1;
+
+                        exists.set({
+                            left: obj.x,
+                            top: obj.y,
+                            scaleX: obj.width / nativeWidth,
+                            scaleY: obj.height / nativeHeight,
+                            angle: obj.rotation,
+                            opacity: obj.opacity,
+                            fill: typeof (obj as any).fill === 'string' ? (obj as any).fill : exists.fill,
+                            stroke: (obj as any).stroke,
+                            strokeWidth: (obj as any).strokeWidth
+                        });
+                        exists.setCoords();
                     } else {
-                        console.log("Sync: Updating Generic object (Rect/Image/Path)", obj.id, obj.type);
+                        console.log("Sync: Updating Generic object (Rect/Image)", obj.id, obj.type);
                         // Rects/Images
                         exists.set({
                             width: obj.width,
@@ -285,6 +354,53 @@ export default function FabricCanvas() {
 
         syncObjects();
     }, [width, height, background, objects]);
+
+    // Keyboard Events
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check if user is typing in an input
+            const target = e.target as HTMLElement;
+            if (
+                target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.isContentEditable
+            ) {
+                return;
+            }
+
+            if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+                e.preventDefault();
+                copyObject();
+                return;
+            }
+
+            if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+                e.preventDefault();
+                pasteObject();
+                return;
+            }
+
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                const canvas = fabricRef.current;
+                if (!canvas) return;
+
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    // Start removing
+                    const id = (activeObject as any).id;
+                    if (id) {
+                        removeObject(id);
+                        // Clear fabric selection immediately to prevent ghosting before next render sync
+                        canvas.discardActiveObject();
+                        canvas.requestRenderAll();
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [removeObject, copyObject, pasteObject]);
 
 
     return (

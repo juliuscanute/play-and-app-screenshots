@@ -98,6 +98,7 @@ export interface CanvasStore {
     activeCanvasId: string | null;
     selectedObjectId: string | null;
     fabricCanvas: any | null;
+    clipboard: CanvasObject | null;
 
     // Canvas Actions
     addCanvas: () => void;
@@ -117,5 +118,9 @@ export interface CanvasStore {
     resetCanvas: () => void;
     loadProject: (canvases: CanvasModel[], activeCanvasId: string) => void;
     renameCanvas: (id: string, name: string) => void;
+
+    // Clipboard Actions
+    copyObject: () => void;
+    pasteObject: () => void;
 }
 
