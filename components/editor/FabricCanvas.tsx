@@ -274,6 +274,7 @@ export default function FabricCanvas() {
 
         fabricRef.current = canvas;
         setFabricCanvas(canvas); // Register with store
+        (window as any).fabricCanvas = canvas; // Debugging exposure
 
         canvas.on('object:modified', (e: any) => {
             const target = e.target;
@@ -341,7 +342,31 @@ export default function FabricCanvas() {
             selectObject(null);
         });
 
-        // ... (keyboard handlers)
+        const handleKeyWrapper = (e: KeyboardEvent) => {
+            // We can invoke specific store actions or canvas actions here
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                // Check if we have an active selection
+                const active = canvas.getActiveObject();
+                if (active) {
+                    // We need to remove via store to keep sync
+                    // We can't access 'removeObject' from store here directly via closure cleanly 
+                    // unless we added it to dependency array, which triggers re-init.
+                    // Better to rely on a global or context listener, or just let the store handle it?
+                    // For now, let's leave keyboard handling to a separate effect or the container.
+                }
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyWrapper);
+
+        return () => {
+            console.log("Disposing Fabric Canvas");
+            window.removeEventListener('keydown', handleKeyWrapper);
+            canvas.dispose();
+            fabricRef.current = null;
+            setFabricCanvas(null);
+            (window as any).fabricCanvas = null;
+        };
     }, []);
 
     // Sync Store -> Canvas

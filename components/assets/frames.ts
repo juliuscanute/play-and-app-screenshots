@@ -27,6 +27,7 @@ export const SAMSUNG_S24_SVG = `
 
 export const IPAD_PRO_SVG = `
 <svg width="1032" height="1376" viewBox="0 0 1032 1376" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1032" height="1376" fill="transparent" opacity="0"/>
     <path d="M34 10 L998 10 Q1022 10 1022 34 L1022 1342 Q1022 1366 998 1366 L34 1366 Q10 1366 10 1342 L10 34 Q10 10 34 10 Z" fill="none" stroke="#000000" stroke-width="12"/>
     <path d="M516 24H516C526 24 536 32 536 42V42C536 52 526 60 516 60H516C506 60 496 52 496 42V42C496 32 506 24 516 24Z" fill="black"/>
 </svg>
@@ -34,6 +35,7 @@ export const IPAD_PRO_SVG = `
 
 export const ANDROID_TABLET_SVG = `
 <svg width="800" height="1280" viewBox="0 0 800 1280" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="1280" fill="transparent" opacity="0"/>
     <path d="M30 10 L770 10 Q790 10 790 30 L790 1250 Q790 1270 770 1270 L30 1270 Q10 1270 10 1250 L10 30 Q10 10 30 10 Z" fill="none" stroke="#000000" stroke-width="12"/>
     <circle cx="400" cy="32" r="8" fill="black"/>
 </svg>
