@@ -72,11 +72,21 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
 
 
     if (obj.type === CanvasObjectType.DeviceFrame) {
+        console.log('[Fabric] Requesting SVG for model:', (obj as any).deviceModel);
         const svgString = getDeviceFrameSVG((obj as any).deviceModel);
+        console.log('[Fabric] SVG String len:', svgString ? svgString.length : 'NULL');
 
         return new Promise((resolve) => {
             // 1. Load the Frame (SVG)
             fabric.loadSVGFromString(svgString, (objects, options) => {
+                console.log('[Fabric] loadSVGFromString callback triggered.');
+
+                if (!objects || objects.length === 0) {
+                    console.error('[Fabric] Error: No objects loaded from SVG!');
+                    resolve(null);
+                    return;
+                }
+
                 const frameGroup = fabric.util.groupSVGElements(objects, options);
 
                 console.log(`[Fabric] Loaded SVG for ${(obj as any).deviceModel}`);
@@ -224,14 +234,18 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
                     });
                 } else {
                     // No image, just frame
-                    // We also center-align the frameGroup to be consistent
+                    // Use left/top origin to match store coordinates (obj.x/y as top-left)
                     frameGroup.set({
-                        originX: 'center',
-                        originY: 'center',
+                        originX: 'left',
+                        originY: 'top',
                     });
 
+                    // EXCLUDE width/height from commonProps to preserve Group's natural size
+                    // Otherwise we scale the Group AND set its width to the target width -> double scaling.
+                    const { width, height, ...restProps } = commonProps;
+
                     frameGroup.set({
-                        ...commonProps,
+                        ...restProps,
                         scaleX: obj.width / (frameGroup.width || 1),
                         scaleY: obj.height / (frameGroup.height || 1),
                     });

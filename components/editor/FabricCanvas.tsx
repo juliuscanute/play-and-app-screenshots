@@ -37,6 +37,8 @@ export default function FabricCanvas() {
             const target = e.target;
             if (!target) return;
 
+            console.log("Event: object:modified", { type: target.type, id: (target as any).id });
+
             const updates: Partial<CanvasObject> = {
                 x: target.left,
                 y: target.top,
@@ -84,18 +86,21 @@ export default function FabricCanvas() {
 
         // ... (selection handlers remain same)
         canvas.on('selection:created', (e: any) => {
+            console.log("Event: selection:created", e.selected?.map((o: any) => o.id));
             if (e.selected && e.selected.length > 0) {
                 selectObject(e.selected[0].id);
             }
         });
 
         canvas.on('selection:updated', (e: any) => {
+            console.log("Event: selection:updated", e.selected?.map((o: any) => o.id));
             if (e.selected && e.selected.length > 0) {
                 selectObject(e.selected[0].id);
             }
         });
 
         canvas.on('selection:cleared', () => {
+            console.log("Event: selection:cleared");
             selectObject(null);
         });
 
@@ -155,8 +160,10 @@ export default function FabricCanvas() {
             });
 
             for (const obj of sortedObjects) {
+                console.log("Sync: Processing object", { id: obj.id, type: obj.type, zIndex: obj.zIndex });
                 const exists = currentObjects.find((o: any) => o.id === obj.id);
                 if (!exists) {
+                    console.log("Sync: Creating new object", obj.id, obj.type);
                     const fabricObj = await createFabricObject(obj);
                     if (fabricObj) {
                         (fabricObj as any).id = obj.id;
@@ -167,11 +174,16 @@ export default function FabricCanvas() {
                     exists.moveTo(sortedObjects.indexOf(obj));
 
                     // CRITCAL UPDATE LOGIC: Reset Scale to 1 when applying dimensions
+                    console.log("Sync: Checking update type for", obj.id, obj.type);
                     if (obj.type === CanvasObjectType.DeviceFrame) {
+                        const fabricObj = exists as any;
+                        console.log(`Sync: [DeviceFrame] id=${obj.id} model=${fabricObj.deviceModel}`);
+                        console.log(`Sync: [DeviceFrame] current: origin=${exists.originX}/${exists.originY} w=${exists.width} h=${exists.height} scale=${exists.scaleX}`);
                         // DeviceFrame is special (Group). Re-creation logic handled separately or strict update
                         // ... (keep existing creation check logic)
-                        const fabricObj = exists as any;
+
                         if (fabricObj.screenshotImageId !== (obj as any).screenshotImageId || fabricObj.deviceModel !== (obj as any).deviceModel) {
+                            console.log("Sync: Re-creating DeviceFrame due to model/image change", obj.id);
                             canvas.remove(exists);
                             const newFabricObj = await createFabricObject(obj);
                             if (newFabricObj) {
@@ -180,6 +192,7 @@ export default function FabricCanvas() {
                                 newFabricObj.moveTo(sortedObjects.indexOf(obj));
                             }
                         } else {
+                            console.log("Sync: Updating existing DeviceFrame props", obj.id);
                             // Update existing Frame Group
                             // Group width/height is weird in Fabric. 
                             // Better to use scale for Groups if internal objects are fixed size.
@@ -229,6 +242,7 @@ export default function FabricCanvas() {
                         });
                         exists.setCoords();
                     } else {
+                        console.log("Sync: Updating Generic object (Rect/Image/Path)", obj.id, obj.type);
                         // Rects/Images
                         exists.set({
                             width: obj.width,
