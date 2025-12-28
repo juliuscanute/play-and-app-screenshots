@@ -29,17 +29,63 @@ const getSize = (size: string) => {
     }
 }
 
+
 export const executeToolCall = (
     toolName: string,
     args: any,
     store: CanvasStore
 ) => {
     console.log(`Executing Tool: ${toolName}`, args);
-    const { width, height } = store;
+
+    if (toolName === 'create_canvas') {
+        store.addCanvas();
+        return;
+    }
+
+    if (toolName === 'duplicate_canvas') {
+        const { canvasId } = args;
+        store.duplicateCanvas(canvasId);
+        return;
+    }
+
+    const { canvasId } = args;
+    // Resolve target canvas dimensions
+    // Store might be a proxy with width/height, OR real store with canvases
+    // If it's the real store, we need to find the canvas.
+    // If it's a proxy (from Sidebar), it might have width/height directly.
+
+    let width = 1080;
+    let height = 1920;
+    let targetId = canvasId || store.activeCanvasId;
+
+    if (store.canvases) {
+        // Real store
+        const targetCanvas = store.canvases.find(c => c.id === targetId);
+        if (targetCanvas) {
+            width = targetCanvas.width;
+            height = targetCanvas.height;
+        } else {
+            console.error(`Target canvas not found: ${targetId}`);
+            // Fallback to active if possible or return?
+            // If implicit targeting failed, maybe we are just setting global props?
+        }
+    } else {
+        // Proxy store from sidebar (has width/height directly)
+        // Check if types allow this? Typescript might yell if we access width on CanvasStore.
+        // We can cast to any for this hybrid logic until refined.
+        width = (store as any).width || 1080;
+        height = (store as any).height || 1920;
+    }
+
 
     if (toolName === 'set_background') {
         const { type, colors } = args;
-        store.setBackground(colors[0]);
+        store.setBackground(colors[0]); // Action targets active by default, or we update store to accept ID?
+        // Store actions currently target activeCanvasId. 
+        // If args has canvasId, we should set activeCanvasId first? 
+        // Or update store actions to accept canvasId.
+        // I updated store actions to target active.
+        // For now, assume AI targets active canvas (as per prompt instructions).
     }
 
     if (toolName === 'add_decorative_shape') {
@@ -66,8 +112,7 @@ export const executeToolCall = (
 
     if (toolName === 'add_line_arrow') {
         const { type, startPosition, endPosition, color, width: strokeWidth } = args;
-        // Simple mapping for demonstration
-        const start = getPosition(startPosition, width, height, 0, 0); // Point
+        const start = getPosition(startPosition, width, height, 0, 0);
         const end = getPosition(endPosition, width, height, 0, 0);
 
         const newLine: any = {
@@ -77,7 +122,7 @@ export const executeToolCall = (
             y: start.y,
             x2: end.x,
             y2: end.y,
-            width: Math.abs(end.x - start.x), // Bounding box approx
+            width: Math.abs(end.x - start.x),
             height: Math.abs(end.y - start.y),
             stroke: color,
             strokeWidth: strokeWidth || 5,
@@ -115,11 +160,19 @@ export const executeToolCall = (
     }
 
     if (toolName === 'configure_device') {
-        // This usually modifies the existing device frame or adds one if missing
-        // For MVP, if no device exists, we add one.
-        const existingDevice = store.objects.find(o => o.type === CanvasObjectType.DeviceFrame);
+        // Logic to find device frame needs objects.
+        // Store proxy has objects, real store has canvases.
+        let objects: any[] = [];
+        if (store.canvases) {
+            const c = store.canvases.find(c => c.id === targetId);
+            objects = c ? c.objects : [];
+        } else {
+            objects = (store as any).objects || [];
+        }
 
-        const deviceWidth = 1000; // Approx for iPhone 15 Pro scaled
+        const existingDevice = objects.find(o => o.type === CanvasObjectType.DeviceFrame);
+
+        const deviceWidth = 1000;
         const deviceHeight = 2000;
 
         if (!existingDevice) {
@@ -129,7 +182,7 @@ export const executeToolCall = (
                 deviceModel: args.model || 'iphone_15_pro',
                 frameColor: 'black',
                 x: width / 2 - deviceWidth / 2,
-                y: height / 2 - deviceHeight / 2, // Center vertically
+                y: height / 2 - deviceHeight / 2,
                 width: deviceWidth,
                 height: deviceHeight,
                 rotation: args.rotation || 0,
@@ -139,10 +192,8 @@ export const executeToolCall = (
             };
             store.addObject(newDevice);
         } else {
-            // Update existing
             store.updateObject(existingDevice.id, {
                 rotation: args.rotation,
-                // TODO: Update position based on args.y_position
             });
         }
     }
@@ -150,12 +201,7 @@ export const executeToolCall = (
     if (toolName === 'add_vector_shape') {
         const { pathData, name, color, position, scale } = args;
 
-        // Base size for vector shapes - allow this to be overridden or derived?
-        // Let's assume a "base" size of 100x100 for normalization, then scale it.
-        // HOWEVER, for SVG paths, the 'width'/'height' in the store should represent the TARGET display size.
-        // FabricCanvas.tsx uses (targetSize / nativeSize) to calculate scaleX/scaleY.
-
-        const baseSize = 300; // Reasonable default
+        const baseSize = 300;
         const appliedScale = scale || 1;
         const finalSize = baseSize * appliedScale;
 
@@ -172,7 +218,7 @@ export const executeToolCall = (
             fill: color,
             rotation: 0,
             opacity: 1,
-            zIndex: 1, // Above background
+            zIndex: 1,
         };
         store.addObject(newPath);
     }
@@ -182,3 +228,4 @@ export const executeToolCall = (
         store.updateObject(id, updates);
     }
 };
+

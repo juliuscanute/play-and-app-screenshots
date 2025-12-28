@@ -5,9 +5,15 @@ import FabricCanvas from '@/components/editor/FabricCanvas';
 import PropertyPanel from '@/components/editor/PropertyPanel';
 import { useCanvasStore } from '@/store/canvas-store';
 
+
 export default function Home() {
-    const { objects, selectedObjectId, updateObject, removeObject, selectObject } = useCanvasStore();
+    const { canvases, activeCanvasId, selectedObjectId, updateObject, removeObject, selectObject } = useCanvasStore();
+
+    const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+    const objects = activeCanvas?.objects || [];
+
     const selectedObject = objects.find(o => o.id === selectedObjectId);
+
 
     return (
         <main className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-black">

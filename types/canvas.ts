@@ -83,14 +83,29 @@ export interface DeviceFrameObject extends BaseObject {
 
 export type CanvasObject = ShapeObject | LineObject | TextObject | ImageObject | PathObject | DeviceFrameObject;
 
-export interface CanvasStore {
+
+export interface CanvasModel {
+    id: string;
+    name: string;
     width: number;
     height: number;
     background: string;
     objects: CanvasObject[];
-    selectedObjectId: string | null;
-    fabricCanvas: any | null; // using any to avoid direct fabric dependency in types, or could be fabric.Canvas
+}
 
+export interface CanvasStore {
+    canvases: CanvasModel[];
+    activeCanvasId: string | null;
+    selectedObjectId: string | null;
+    fabricCanvas: any | null;
+
+    // Canvas Actions
+    addCanvas: () => void;
+    duplicateCanvas: (id: string) => void;
+    removeCanvas: (id: string) => void;
+    setActiveCanvas: (id: string) => void;
+
+    // Active Canvas Modifiers
     setSize: (width: number, height: number) => void;
     setBackground: (color: string) => void;
     addObject: (object: CanvasObject) => void;
@@ -101,3 +116,4 @@ export interface CanvasStore {
     setFabricCanvas: (canvas: any) => void;
     resetCanvas: () => void;
 }
+

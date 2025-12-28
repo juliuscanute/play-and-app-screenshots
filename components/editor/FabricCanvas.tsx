@@ -11,7 +11,16 @@ import { useCanvasZoom } from '@/hooks/useCanvasZoom';
 export default function FabricCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<fabric.Canvas | null>(null);
-    const { width, height, background, objects, updateObject, setFabricCanvas, selectObject } = useCanvasStore();
+
+    const { canvases, activeCanvasId, updateObject, setFabricCanvas, selectObject } = useCanvasStore();
+
+    // Resolve Active Canvas
+    const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+    const width = activeCanvas?.width || 1080;
+    const height = activeCanvas?.height || 1920;
+    const background = activeCanvas?.background || '#ffffff';
+    const objects = activeCanvas?.objects || [];
+
 
     // Zoom Hook
     const { zoom, containerRef, zoomIn, zoomOut, zoomFit } = useCanvasZoom(width, height);

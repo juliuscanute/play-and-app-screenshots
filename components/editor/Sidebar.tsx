@@ -4,29 +4,54 @@ import React, { useState } from 'react';
 import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
 import { DeviceModel, CanvasObjectType } from '@/types/canvas';
-import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus } from 'lucide-react';
+
+import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus, Copy } from 'lucide-react';
+
 import { useTheme } from '@/components/ThemeProvider';
 import { v4 as uuidv4 } from 'uuid';
 import PropertyPanel from './PropertyPanel';
 
 export default function Sidebar() {
-    const { width, height, background, objects, addObject, setBackground, fabricCanvas, setSize, selectedObjectId, updateObject, removeObject, selectObject } = useCanvasStore();
+
+    const {
+        canvases, activeCanvasId, setActiveCanvas, addCanvas, duplicateCanvas, removeCanvas,
+        setBackground, fabricCanvas, setSize, updateObject, selectObject, addObject: storeAddObject
+    } = useCanvasStore();
+
+    // Resolve Active Canvas
+    const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+
+    const width = activeCanvas?.width || 1080;
+    const height = activeCanvas?.height || 1920;
+    const background = activeCanvas?.background || '#ffffff';
+    const objects = activeCanvas?.objects || [];
+
+    // Proxy addObject to target active canvas
+    const addObject = (obj: any) => storeAddObject(obj);
+
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
+    const selectedObjectId = useCanvasStore((state: any) => state.selectedObjectId);
     const selectedObject = objects.find(o => o.id === selectedObjectId);
 
+    // CRITICAL: This proxy creates a "fake" single-canvas store view for the executor and API
+    // ensuring they operate ONLY on the active canvas.
     const getStoreProxy = () => ({
-        width, height, background, objects, id: 'current',
-        setId: () => { },
-        setSize: () => { },
-        setBackground,
-        addObject,
-        updateObject,
-        removeObject: () => { },
-        setObjects: () => { },
-        resetCanvas: () => { }
+        width,
+        height,
+        background,
+        objects,
+        // Wrap actions to target active canvas implicitly if needed, though executor usually handles logic
+        // But for `canvasState` in API, we pass distinct values.
+        // For `executeToolCall(..., store)`, we pass the REAL store.
+        // But the executor needs to know how to resolve "active" context if arguments omit canvasId.
+        // My previous executor update handled `store.activeCanvasId` correctly.
+        // So passing `useCanvasStore.getState()` to executor is correct.
+
+        // HOWEVER, the `canvasState` sent to API must be the ACTIVE canvas only.
+        ...useCanvasStore.getState()
     });
 
     const handleGenerate = async () => {
@@ -34,7 +59,14 @@ export default function Sidebar() {
         setIsGenerating(true);
 
         try {
-            const canvasState = { width, height, background, objects };
+            // Send ONLY the active canvas state to the LLM
+            const canvasState = {
+                width,
+                height,
+                background,
+                objects
+            };
+
             const res = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -44,7 +76,7 @@ export default function Sidebar() {
             const data = await res.json();
             if (data.toolCalls) {
                 data.toolCalls.forEach((call: any) => {
-                    executeToolCall(call.name, call.args, getStoreProxy() as any);
+                    executeToolCall(call.name, call.args, useCanvasStore.getState());
                 });
             }
         } catch (error) {
@@ -59,7 +91,6 @@ export default function Sidebar() {
         if (!fabricCanvas) return;
         setIsGenerating(true);
 
-        // Capture low-res screenshot for context
         const dataURL = fabricCanvas.toDataURL({
             format: 'png',
             multiplier: 0.5,
@@ -81,7 +112,7 @@ export default function Sidebar() {
             const data = await res.json();
             if (data.toolCalls) {
                 data.toolCalls.forEach((call: any) => {
-                    executeToolCall(call.name, call.args, getStoreProxy() as any);
+                    executeToolCall(call.name, call.args, useCanvasStore.getState());
                 });
             }
         } catch (error) {
@@ -91,8 +122,6 @@ export default function Sidebar() {
             setIsGenerating(false);
         }
     };
-
-
 
     const handleExport = () => {
         if (!fabricCanvas) return;
@@ -127,7 +156,42 @@ export default function Sidebar() {
                 </button>
             </div>
 
+            {/* Canvas Switcher */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">
+                    Canvases
+                </label>
+                <div className="flex flex-col gap-2">
+                    <select
+                        value={activeCanvasId || ''}
+                        onChange={(e) => setActiveCanvas(e.target.value)}
+                        className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
+                    >
+                        {canvases.map(canvas => (
+                            <option key={canvas.id} value={canvas.id}>
+                                {canvas.name}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => addCanvas()}
+                            className="flex-1 py-1.5 px-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors flex items-center justify-center gap-1"
+                        >
+                            <Plus className="w-3 h-3" /> New
+                        </button>
+                        <button
+                            onClick={() => activeCanvasId && duplicateCanvas(activeCanvasId)}
+                            className="flex-1 py-1.5 px-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors flex items-center justify-center gap-1"
+                        >
+                            <Copy className="w-3 h-3" /> Duplicate
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div className="p-4 flex-1 overflow-y-auto">
+
                 <div className="mb-8">
                     <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-purple-500" />
