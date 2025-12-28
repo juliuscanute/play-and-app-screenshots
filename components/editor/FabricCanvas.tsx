@@ -83,6 +83,11 @@ const createFabricObject = async (obj: CanvasObject): Promise<fabric.Object | nu
             fabric.loadSVGFromString(svgString, (objects, options) => {
                 const frameGroup = fabric.util.groupSVGElements(objects, options);
 
+                console.log(`[Fabric] Loaded SVG for ${(obj as any).deviceModel}`);
+                console.log(`[Fabric] Objects count: ${objects.length}`);
+                console.log(`[Fabric] Group Dim: ${frameGroup.width} x ${frameGroup.height}`);
+                console.log(`[Fabric] Target Dim: ${obj.width} x ${obj.height}`);
+
                 // 2. Load the Screenshot (Image) if exists
                 if ((obj as any).screenshotImageId) {
                     console.log("   [createFabricObject] Loading screenshot image...");
@@ -122,6 +127,10 @@ const createFabricObject = async (obj: CanvasObject): Promise<fabric.Object | nu
                             screenPadding = 10; // Thinner bezels for S24
                         } else if (model.includes('pixel')) {
                             screenPadding = 14;
+                        } else if (model.includes('ipad')) {
+                            screenPadding = 30; // Thicker bezel for Tablet
+                        } else if (model.includes('tablet')) {
+                            screenPadding = 30; // Thicker bezel for Tablet
                         } else {
                             screenPadding = 19; // iPhone
                         }
@@ -175,6 +184,10 @@ const createFabricObject = async (obj: CanvasObject): Promise<fabric.Object | nu
                             clipRadius = 22; // Pixel 9 (SVG rx=24)
                         } else if (model.includes('iphone')) {
                             clipRadius = 46; // iPhone 16 (approx rx=55)
+                        } else if (model.includes('ipad')) {
+                            clipRadius = 20; // iPad Pro (SVG rx=24)
+                        } else if (model.includes('tablet')) {
+                            clipRadius = 16; // Android Tablet (SVG rx=20)
                         }
 
                         const clipRect = new fabric.Rect({

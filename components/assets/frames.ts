@@ -25,9 +25,25 @@ export const SAMSUNG_S24_SVG = `
 </svg>
 `;
 
+export const IPAD_PRO_SVG = `
+<svg width="1032" height="1376" viewBox="0 0 1032 1376" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M34 10 L998 10 Q1022 10 1022 34 L1022 1342 Q1022 1366 998 1366 L34 1366 Q10 1366 10 1342 L10 34 Q10 10 34 10 Z" fill="#FFFFFF" stroke="#000000" stroke-width="12"/>
+    <path d="M516 0H516C526 0 536 8 536 18V18C536 28 526 36 516 36H516C506 36 496 28 496 18V18C496 8 506 0 516 0Z" fill="black"/>
+</svg>
+`;
+
+export const ANDROID_TABLET_SVG = `
+<svg width="800" height="1280" viewBox="0 0 800 1280" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 10 L770 10 Q790 10 790 30 L790 1250 Q790 1270 770 1270 L30 1270 Q10 1270 10 1250 L10 30 Q10 10 30 10 Z" fill="#FFFFFF" stroke="#000000" stroke-width="12"/>
+    <circle cx="400" cy="24" r="8" fill="black"/>
+</svg>
+`;
+
 export const getDeviceFrameSVG = (model: string) => {
     const m = model?.toLowerCase() || '';
     if (m.includes('pixel')) return PIXEL_9_SVG;
     if (m.includes('samsung') || m.includes('galaxy')) return SAMSUNG_S24_SVG;
+    if (m.includes('ipad')) return IPAD_PRO_SVG;
+    if (m.includes('android_tablet') || m.includes('tablet')) return ANDROID_TABLET_SVG;
     return IPHONE_16_PRO_SVG;
 };

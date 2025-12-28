@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CanvasStore } from '@/store/canvas-store';
+import { CanvasStore } from '@/types/canvas';
 import { CanvasObject, DeviceFrameObject } from '@/types/canvas';
 
 const getPosition = (pos: string, width: number, height: number, objWidth: number, objHeight: number) => {

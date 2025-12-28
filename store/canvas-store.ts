@@ -1,67 +1,62 @@
 import { create } from 'zustand';
-import { CanvasState, CanvasObject, FillStyle } from '@/types/canvas';
-import { v4 as uuidv4 } from 'uuid';
+import { CanvasObject, CanvasStore } from '@/types/canvas';
 
-export interface CanvasStore extends CanvasState {
-    // Fabric Instance Ref (Non-reactive)
-    fabricCanvas: any | null; // Using any to avoid circular type issues with 'fabric' import
-    setFabricCanvas: (canvas: any) => void;
-    selectedObjectId: string | null;
-
-    // Actions
-    setId: (id: string) => void;
-    setSize: (width: number, height: number) => void;
-    setBackground: (background: FillStyle) => void;
-    selectObject: (id: string | null) => void;
-    addObject: (object: CanvasObject) => void;
-    updateObject: (id: string, updates: Partial<CanvasObject>) => void;
-    removeObject: (id: string) => void;
-    setObjects: (objects: CanvasObject[]) => void;
-    resetCanvas: () => void;
-}
-
-const DEFAULT_WIDTH = 1290;
-const DEFAULT_HEIGHT = 2796;
-
-export const useCanvasStore = create<CanvasStore>((set) => ({
-    id: uuidv4(),
-    width: DEFAULT_WIDTH,
-    height: DEFAULT_HEIGHT,
+export const useCanvasStore = create<CanvasStore>((set, get) => ({
+    width: 1080,
+    height: 1920,
     background: '#ffffff',
     objects: [],
-    fabricCanvas: null,
     selectedObjectId: null,
+    fabricCanvas: null,
 
-    setFabricCanvas: (canvas) => set({ fabricCanvas: canvas }),
+    setSize: (width: number, height: number) => {
+        set({ width, height });
+    },
 
-    setId: (id) => set({ id }),
-    setSize: (width, height) => set({ width, height }),
-    setBackground: (background) => set({ background }),
+    setBackground: (background: string) => {
+        set({ background });
+    },
 
-    selectObject: (id) => set({ selectedObjectId: id }),
+    addObject: (object: CanvasObject) => {
+        set((state) => ({
+            objects: [...state.objects, object]
+        }));
+    },
 
-    addObject: (object) => set((state) => ({
-        objects: [...state.objects, object]
-    })),
+    updateObject: (id: string, updates: Partial<CanvasObject>) => {
+        set((state) => ({
+            objects: state.objects.map((obj) =>
+                obj.id === id ? { ...obj, ...updates } as CanvasObject : obj
+            )
+        }));
+    },
 
-    updateObject: (id, updates) => set((state) => ({
-        objects: state.objects.map((obj) =>
-            obj.id === id ? { ...obj, ...updates } as CanvasObject : obj
-        ),
-    })),
+    removeObject: (id: string) => {
+        set((state) => ({
+            objects: state.objects.filter((obj) => obj.id !== id),
+            selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId
+        }));
+    },
 
-    removeObject: (id) => set((state) => ({
-        objects: state.objects.filter((obj) => obj.id !== id),
-        selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId,
-    })),
+    selectObject: (id: string | null) => {
+        set({ selectedObjectId: id });
+    },
 
-    setObjects: (objects) => set({ objects }),
+    setObjects: (objects: CanvasObject[]) => {
+        set({ objects });
+    },
 
-    resetCanvas: () => set({
-        width: DEFAULT_WIDTH,
-        height: DEFAULT_HEIGHT,
-        background: '#ffffff',
-        objects: [],
-        selectedObjectId: null,
-    }),
+    setFabricCanvas: (canvas: any) => {
+        set({ fabricCanvas: canvas });
+    },
+
+    resetCanvas: () => {
+        set({
+            objects: [],
+            selectedObjectId: null,
+            background: '#ffffff',
+            width: 1080,
+            height: 1920
+        });
+    }
 }));
