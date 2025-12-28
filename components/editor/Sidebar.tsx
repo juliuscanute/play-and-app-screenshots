@@ -16,7 +16,7 @@ export default function Sidebar() {
     const {
         canvases, activeCanvasId, setActiveCanvas, addCanvas, duplicateCanvas, removeCanvas,
         setBackground, fabricCanvas, setSize, updateObject, selectObject, addObject: storeAddObject,
-        loadProject, renameCanvas
+        loadProject, renameCanvas, fileHandle, setFileHandle
     } = useCanvasStore();
 
     // Resolve Active Canvas
@@ -162,7 +162,7 @@ export default function Sidebar() {
         document.body.removeChild(link);
     };
 
-    const [fileHandle, setFileHandle] = useState<any>(null);
+    // const [fileHandle, setFileHandle] = useState<any>(null); // MOVED TO GLOBAL STORE
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleSaveProject = async () => {
@@ -173,19 +173,66 @@ export default function Sidebar() {
         };
         const jsonString = JSON.stringify(projectData, null, 2);
 
+        console.log("SAVE ATTEMPT. FileHandle:", fileHandle);
+
+        // 1. Try writing to existing global handle
         if (fileHandle) {
             try {
+                console.log("Attempting write to existing handle...");
+                // Check and request permission if needed
+                if ((await fileHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+                    console.log("Requesting write permission...");
+                    const status = await fileHandle.requestPermission({ mode: 'readwrite' });
+                    if (status !== 'granted') {
+                        throw new Error("Permission denied by user");
+                    }
+                }
+
                 const writable = await fileHandle.createWritable();
                 await writable.write(jsonString);
                 await writable.close();
+                console.log("Write success!");
                 alert("Project saved!");
                 return;
             } catch (err) {
                 console.error("Failed to save to file handle:", err);
-                // Fallback to download if save fails
+                // Fallthrough to fallback
             }
+        } else {
+            console.log("No existing file handle found.");
         }
 
+        // 2. Try 'Save As' with File System Access API
+        if ('showSaveFilePicker' in window) {
+            try {
+                console.log("Opening Save Picker...");
+                const handle = await (window as any).showSaveFilePicker({
+                    types: [{
+                        description: 'JSON Files',
+                        accept: { 'application/json': ['.json'] },
+                    }],
+                });
+                const writable = await handle.createWritable();
+                await writable.write(jsonString);
+                await writable.close();
+                setFileHandle(handle); // Store handle globally
+                console.log("Save Picker Success. Handle stored.");
+                alert("Project saved!");
+                return;
+            } catch (err: any) {
+                if (err.name !== 'AbortError') {
+                    console.error("Save picker failed", err);
+                } else {
+                    console.log("Save picker cancelled");
+                    return; // User cancelled
+                }
+            }
+        } else {
+            console.log("System Access API not supported.");
+        }
+
+        // 3. Fallback to Download
+        console.log("Fallback to download.");
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -198,31 +245,41 @@ export default function Sidebar() {
     };
 
     const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("Manual Load triggered");
         const file = e.target.files?.[0];
         if (!file) return;
-        setFileHandle(null); // Reset handle for normal file uploads
+        setFileHandle(null); // Reset global handle for manual uploads
         readFileAndLoad(file);
     };
 
     const handleOpenProject = async () => {
         if ('showOpenFilePicker' in window) {
             try {
+                console.log("Opening File Picker...");
                 const [handle] = await (window as any).showOpenFilePicker({
                     types: [{
                         description: 'JSON Files',
                         accept: { 'application/json': ['.json'] },
                     }],
                 });
+                console.log("File Picker Success. Handle obtained:", handle);
                 const file = await handle.getFile();
-                setFileHandle(handle);
+                setFileHandle(handle); // Store handle globally
                 readFileAndLoad(file);
             } catch (err) {
                 console.error("File picker cancelled or failed", err);
             }
         } else {
+            console.log("File Picker not supported, fallback to input.");
             fileInputRef.current?.click();
         }
     };
+
+    const [fsAccessSupported, setFsAccessSupported] = useState(false);
+
+    React.useEffect(() => {
+        setFsAccessSupported('showOpenFilePicker' in window);
+    }, []);
 
     const readFileAndLoad = (file: File) => {
         const reader = new FileReader();
@@ -231,6 +288,9 @@ export default function Sidebar() {
                 const projectData = JSON.parse(event.target?.result as string);
                 if (projectData.canvases && projectData.activeCanvasId) {
                     loadProject(projectData.canvases, projectData.activeCanvasId);
+                    // Check store directly to avoid stale closure
+                    const currentHandle = useCanvasStore.getState().fileHandle;
+                    alert(`Project loaded! Mode: ${currentHandle ? "Persistent Link" : "Import (Copy)"}`);
                 } else {
                     alert('Invalid project file');
                 }
@@ -254,9 +314,12 @@ export default function Sidebar() {
             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                 <div>
                     <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        AI Design
+                        Screenshot Designer
                     </h1>
-                    <p className="text-xs text-gray-400 mt-1">Powered by Gemini 2.0</p>
+                    <p className="text-xs text-gray-400 mt-1">Powered by Gemini</p>
+                    <div className={`text-[10px] mt-1 font-medium ${fsAccessSupported ? 'text-green-600 dark:text-green-400' : 'text-orange-500'}`}>
+                        {fsAccessSupported ? '⚡ Smart Save Active' : '⚠ Limited Save Support (Browser)'}
+                    </div>
                 </div>
                 <button
                     onClick={toggleTheme}
@@ -775,10 +838,13 @@ export default function Sidebar() {
                     <div className="grid grid-cols-2 gap-2 mb-2">
                         <button
                             onClick={handleSaveProject}
-                            className="py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors"
+                            className="py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors relative"
                         >
                             <Save className="w-4 h-4" />
                             Save
+                            {fileHandle && (
+                                <span className="absolute -top-2 -right-2 w-2 h-2 bg-green-500 rounded-full border border-white dark:border-gray-900" title={`Linked to ${fileHandle.name}`}></span>
+                            )}
                         </button>
                         <button
                             onClick={handleOpenProject}
@@ -788,6 +854,12 @@ export default function Sidebar() {
                             Load
                         </button>
                     </div>
+                    {fileHandle && (
+                        <div className="text-[10px] text-green-600 dark:text-green-400 text-center mb-2 flex items-center justify-center gap-1">
+                            <Check className="w-3 h-3" />
+                            Linked: {fileHandle.name}
+                        </div>
+                    )}
                     <button
                         onClick={handleExport}
                         className="w-full py-2 bg-gray-900 dark:bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-900 flex items-center justify-center gap-2"

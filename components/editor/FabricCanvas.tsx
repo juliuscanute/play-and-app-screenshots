@@ -12,7 +12,7 @@ export default function FabricCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<fabric.Canvas | null>(null);
 
-    const { canvases, activeCanvasId, updateObject, removeObject, copyObject, pasteObject, setFabricCanvas, selectObject } = useCanvasStore();
+    const { canvases, activeCanvasId, updateObject, removeObject, copyObject, pasteObject, undo, redo, setFabricCanvas, selectObject } = useCanvasStore();
 
     // Resolve Active Canvas
     const activeCanvas = canvases.find(c => c.id === activeCanvasId);
@@ -380,6 +380,20 @@ export default function FabricCanvas() {
                 return;
             }
 
+            // Undo: Cmd+Z
+            if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+                return;
+            }
+
+            // Redo: Cmd+Shift+Z or Cmd+Y
+            if (((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'z') || ((e.metaKey || e.ctrlKey) && e.key === 'y')) {
+                e.preventDefault();
+                redo();
+                return;
+            }
+
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 const canvas = fabricRef.current;
                 if (!canvas) return;
@@ -400,7 +414,7 @@ export default function FabricCanvas() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [removeObject, copyObject, pasteObject]);
+    }, [removeObject, copyObject, pasteObject, undo, redo]);
 
 
     return (

@@ -22,11 +22,19 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     selectedObjectId: null,
     fabricCanvas: null,
     clipboard: null,
+    past: [],
+    future: [],
+    fileHandle: null,
 
 
     // Canvas Management
+    setFileHandle: (handle) => {
+        set({ fileHandle: handle });
+    },
+
     addCanvas: () => {
         set((state) => {
+            const historyUpdate = { past: [...state.past, state.canvases], future: [] };
             const id = uuidv4();
             const newCanvas: CanvasModel = {
                 id,
@@ -45,6 +53,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
     duplicateCanvas: (canvasId) => {
         set((state) => {
+            const historyUpdate = { past: [...state.past, state.canvases], future: [] };
             const original = state.canvases.find(c => c.id === canvasId);
             if (!original) return state;
 
@@ -64,6 +73,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
     removeCanvas: (canvasId) => {
         set((state) => {
+            const historyUpdate = { past: [...state.past, state.canvases], future: [] };
             const newCanvases = state.canvases.filter(c => c.id !== canvasId);
             // Prevent removing last canvas
             if (newCanvases.length === 0) return state;
@@ -75,7 +85,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 
             return {
                 canvases: newCanvases,
-                activeCanvasId: newActiveId
+                activeCanvasId: newActiveId,
+                ...historyUpdate
             };
         });
     },
@@ -89,7 +100,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         set((state) => ({
             canvases: state.canvases.map(c =>
                 c.id === state.activeCanvasId ? { ...c, width, height } : c
-            )
+            ),
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -97,7 +110,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         set((state) => ({
             canvases: state.canvases.map(c =>
                 c.id === state.activeCanvasId ? { ...c, background } : c
-            )
+            ),
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -106,7 +121,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         set((state) => ({
             canvases: state.canvases.map(c =>
                 c.id === state.activeCanvasId ? { ...c, objects: [...c.objects, object] } : c
-            )
+            ),
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -119,7 +136,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                         obj.id === id ? { ...obj, ...updates } as CanvasObject : obj
                     )
                 } : c
-            )
+            ),
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -131,7 +150,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                     objects: c.objects.filter(obj => obj.id !== id)
                 } : c
             ),
-            selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId
+            selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId,
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -144,7 +165,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         set((state) => ({
             canvases: state.canvases.map(c =>
                 c.id === state.activeCanvasId ? { ...c, objects } : c
-            )
+            ),
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -164,7 +187,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                     height: 1920
                 } : c
             ),
-            selectedObjectId: null
+            selectedObjectId: null,
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -172,7 +197,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         set({
             canvases,
             activeCanvasId,
-            selectedObjectId: null
+            selectedObjectId: null,
+            past: [], // Reset history on new project load
+            future: []
         });
     },
 
@@ -180,7 +207,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         set((state) => ({
             canvases: state.canvases.map(c =>
                 c.id === id ? { ...c, name } : c
-            )
+            ),
+            past: [...state.past, state.canvases],
+            future: []
         }));
     },
 
@@ -218,7 +247,42 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                 canvases: canvases.map(c =>
                     c.id === activeCanvasId ? { ...c, objects: [...c.objects, newObject] } : c
                 ),
-                selectedObjectId: newId
+                selectedObjectId: newId,
+                past: [...state.past, state.canvases], // Save history
+                future: []
+            };
+        });
+    },
+
+    undo: () => {
+        set((state) => {
+            if (state.past.length === 0) return state;
+
+            const previousCanvases = state.past[state.past.length - 1];
+            const newPast = state.past.slice(0, -1);
+
+            return {
+                canvases: previousCanvases,
+                past: newPast,
+                future: [state.canvases, ...state.future],
+                // We might want to clear selection or keep it safe
+                selectedObjectId: null
+            };
+        });
+    },
+
+    redo: () => {
+        set((state) => {
+            if (state.future.length === 0) return state;
+
+            const nextCanvases = state.future[0];
+            const newFuture = state.future.slice(1);
+
+            return {
+                canvases: nextCanvases,
+                past: [...state.past, state.canvases],
+                future: newFuture,
+                selectedObjectId: null
             };
         });
     }

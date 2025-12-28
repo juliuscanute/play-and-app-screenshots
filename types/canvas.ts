@@ -99,12 +99,16 @@ export interface CanvasStore {
     selectedObjectId: string | null;
     fabricCanvas: any | null;
     clipboard: CanvasObject | null;
+    past: CanvasModel[][];
+    future: CanvasModel[][];
+    fileHandle: any | null; // FileSystemFileHandle
 
     // Canvas Actions
     addCanvas: () => void;
     duplicateCanvas: (id: string) => void;
     removeCanvas: (id: string) => void;
     setActiveCanvas: (id: string) => void;
+    setFileHandle: (handle: any | null) => void;
 
     // Active Canvas Modifiers
     setSize: (width: number, height: number) => void;
@@ -122,5 +126,8 @@ export interface CanvasStore {
     // Clipboard Actions
     copyObject: () => void;
     pasteObject: () => void;
-}
 
+    // History Actions
+    undo: () => void;
+    redo: () => void;
+}
