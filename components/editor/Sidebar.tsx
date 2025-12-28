@@ -3,14 +3,18 @@
 import React, { useState } from 'react';
 import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
-import { Loader2, Sparkles, Download, Palette, Settings, Moon, Sun } from 'lucide-react';
+import { Loader2, Sparkles, Download, Palette, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Plus } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import { v4 as uuidv4 } from 'uuid';
+import PropertyPanel from './PropertyPanel';
 
 export default function Sidebar() {
-    const { width, height, background, objects, addObject, setBackground, fabricCanvas, setSize } = useCanvasStore();
+    const { width, height, background, objects, addObject, setBackground, fabricCanvas, setSize, selectedObjectId, updateObject, removeObject, selectObject } = useCanvasStore();
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const { theme, toggleTheme } = useTheme();
+
+    const selectedObject = objects.find(o => o.id === selectedObjectId);
 
     const getStoreProxy = () => ({
         width, height, background, objects, id: 'current',
@@ -122,6 +126,162 @@ export default function Sidebar() {
                             "Generate"
                         )}
                     </button>
+                </div>
+
+                {/* Insert Tools */}
+                <div className="mb-8">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 block flex items-center gap-2">
+                        <Plus className="w-3 h-3" />
+                        Insert
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'rect',
+                                    x: width / 2 - 50,
+                                    y: height / 2 - 50,
+                                    width: 100,
+                                    height: 100,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    fill: '#3B82F6',
+                                    cornerRadius: 10
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Square className="w-5 h-5 text-blue-500" />
+                            <span className="text-xs">Rectangle</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'circle',
+                                    x: width / 2 - 50,
+                                    y: height / 2 - 50,
+                                    width: 100,
+                                    height: 100,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    fill: '#EF4444',
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Circle className="w-5 h-5 text-red-500" />
+                            <span className="text-xs">Circle</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'text',
+                                    x: width / 2 - 100,
+                                    y: height / 2 - 20,
+                                    width: 200,
+                                    height: 40,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    fill: '#000000',
+                                    text: 'Detail Text',
+                                    fontFamily: 'Inter',
+                                    fontSize: 32,
+                                    fontWeight: 'bold',
+                                    textAlign: 'center'
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Type className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            <span className="text-xs">Text</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'device_frame',
+                                    x: width / 2 - 216,
+                                    y: height / 2 - 466,
+                                    width: 433,
+                                    height: 932,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    deviceModel: 'iphone_16_pro',
+                                    frameColor: 'titanium'
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Smartphone className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                            <span className="text-xs">iPhone 16</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'device_frame',
+                                    x: width / 2 - 206,
+                                    y: height / 2 - 457,
+                                    width: 412,
+                                    height: 915,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    deviceModel: 'pixel_9',
+                                    frameColor: 'obsidian'
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Smartphone className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                            <span className="text-xs">Pixel 9</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: 'device_frame',
+                                    x: width / 2 - 206,
+                                    y: height / 2 - 446,
+                                    width: 412,
+                                    height: 892,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    deviceModel: 'samsung_s24',
+                                    frameColor: 'titanium_gray'
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Smartphone className="w-5 h-5 text-gray-800 dark:text-gray-200" />
+                            <span className="text-xs">Samsung S24</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Presets */}

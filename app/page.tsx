@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/editor/Sidebar';
 
+import RightSidebar from '@/components/editor/RightSidebar';
+
 // Dynamic import to avoid SSR issues with Fabric.js
 const FabricCanvas = dynamic(() => import('@/components/editor/FabricCanvas'), {
   ssr: false,
@@ -19,6 +21,7 @@ export default function Home() {
           <FabricCanvas />
         </div>
       </div>
+      <RightSidebar />
     </main>
   );
 }

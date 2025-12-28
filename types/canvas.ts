@@ -46,7 +46,9 @@ export interface TextObject extends BaseObject {
   text: string;
   fontFamily: string;
   fontSize: number;
-  fontWeight: '400' | '700' | '900';
+  fontWeight: '400' | '700' | '900' | 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  underline?: boolean;
   fill: FillStyle;
   textAlign: 'left' | 'center' | 'right';
   shadow?: Shadow;

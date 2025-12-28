@@ -1,26 +1,33 @@
-export const IPHONE_15_PRO_SVG = `
-<svg width="400" height="800" viewBox="0 0 430 932" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M125 0H305V35C305 45 295 55 285 55H145C135 55 125 45 125 35V0Z" fill="#000000"/>
-<rect x="25" y="25" width="380" height="882" rx="45" fill="none" stroke="none" /> 
-<!-- Screen hole is implicitly transparent if we don't draw it, but original SVG had rect x=5 width=420 which is the body. -->
-<!-- To simulate a hole, we'd need a mask. For MVP, let's just draw the BORDER (Stroke) and the Dynamic Island. -->
-<!-- The user image is Layer 0, Frame is Layer 1. The Frame should have a transparent middle. -->
-<!-- Updating SVG to be Stroke Only for the body -->
-<rect x="5" y="5" width="420" height="922" rx="55" stroke="#333333" stroke-width="10" fill="none"/>
+// Device Frame SVGs
+// We use a transparent rect at the bottom to ensure Fabric calculates the bounding box correctly.
+
+export const IPHONE_16_PRO_SVG = `
+<svg width="433" height="932" viewBox="0 0 433 932" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="433" height="932" fill="transparent" opacity="0"/>
+    <path d="M0 65C0 29.1015 29.1015 0 65 0H368C403.899 0 433 29.1015 433 65V867C433 902.899 403.899 932 368 932H65C29.1015 932 0 902.899 0 867V65Z" fill="none" stroke="#333333" stroke-width="8"/>
+    <path d="M125 0H305V35C305 45 295 55 285 55H145C135 55 125 45 125 35V0Z" fill="black"/>
 </svg>
 `;
 
-export const PIXEL_10_SVG = `
+export const PIXEL_9_SVG = `
 <svg width="412" height="915" viewBox="0 0 412 915" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="5" y="5" width="402" height="905" rx="36" stroke="#333333" stroke-width="10" fill="none"/>
-<circle cx="206" cy="40" r="10" fill="black"/>
+    <rect width="412" height="915" fill="transparent" opacity="0"/>
+    <rect x="4" y="4" width="404" height="907" rx="24" fill="none" stroke="#333333" stroke-width="8"/>
+    <circle cx="206" cy="24" r="12" fill="black"/>
+</svg>
+`;
+
+export const SAMSUNG_S24_SVG = `
+<svg width="412" height="892" viewBox="0 0 412 892" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="412" height="892" fill="transparent" opacity="0"/>
+    <rect x="4" y="4" width="404" height="884" rx="12" fill="none" stroke="#333333" stroke-width="8"/>
+    <circle cx="206" cy="24" r="10" fill="black"/>
 </svg>
 `;
 
 export const getDeviceFrameSVG = (model: string) => {
-    if (model && model.toLowerCase().includes('pixel')) {
-        return PIXEL_10_SVG;
-    }
-    // Return iPhone by default for MVP
-    return IPHONE_15_PRO_SVG;
+    const m = model?.toLowerCase() || '';
+    if (m.includes('pixel')) return PIXEL_9_SVG;
+    if (m.includes('samsung') || m.includes('galaxy')) return SAMSUNG_S24_SVG;
+    return IPHONE_16_PRO_SVG;
 };

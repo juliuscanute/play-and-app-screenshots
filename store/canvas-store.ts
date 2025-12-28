@@ -6,11 +6,13 @@ export interface CanvasStore extends CanvasState {
     // Fabric Instance Ref (Non-reactive)
     fabricCanvas: any | null; // Using any to avoid circular type issues with 'fabric' import
     setFabricCanvas: (canvas: any) => void;
+    selectedObjectId: string | null;
 
     // Actions
     setId: (id: string) => void;
     setSize: (width: number, height: number) => void;
     setBackground: (background: FillStyle) => void;
+    selectObject: (id: string | null) => void;
     addObject: (object: CanvasObject) => void;
     updateObject: (id: string, updates: Partial<CanvasObject>) => void;
     removeObject: (id: string) => void;
@@ -28,12 +30,15 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
     background: '#ffffff',
     objects: [],
     fabricCanvas: null,
+    selectedObjectId: null,
 
     setFabricCanvas: (canvas) => set({ fabricCanvas: canvas }),
 
     setId: (id) => set({ id }),
     setSize: (width, height) => set({ width, height }),
     setBackground: (background) => set({ background }),
+
+    selectObject: (id) => set({ selectedObjectId: id }),
 
     addObject: (object) => set((state) => ({
         objects: [...state.objects, object]
@@ -47,6 +52,7 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
 
     removeObject: (id) => set((state) => ({
         objects: state.objects.filter((obj) => obj.id !== id),
+        selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId,
     })),
 
     setObjects: (objects) => set({ objects }),
@@ -56,5 +62,6 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
         height: DEFAULT_HEIGHT,
         background: '#ffffff',
         objects: [],
+        selectedObjectId: null,
     }),
 }));
