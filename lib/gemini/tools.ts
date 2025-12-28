@@ -24,12 +24,28 @@ export const tools: FunctionDeclaration[] = [
         parameters: {
             type: SchemaType.OBJECT,
             properties: {
-                shape: { type: SchemaType.STRING, enum: ["circle", "rect"], format: "enum" },
+                shape: { type: SchemaType.STRING, enum: ["circle", "rect", "triangle", "polygon"], format: "enum" },
                 position: { type: SchemaType.STRING, enum: ["top_left", "top_right", "bottom_left", "bottom_right", "center_behind_phone", "random", "top_center", "bottom_center", "center_left", "center_right"], format: "enum" },
                 color: { type: SchemaType.STRING, description: "Hex code or 'accent'." },
-                size: { type: SchemaType.STRING, enum: ["small", "medium", "large"], format: "enum" }
+                size: { type: SchemaType.STRING, enum: ["small", "medium", "large"], format: "enum" },
+                sides: { type: SchemaType.NUMBER, description: "Number of sides for polygon (def 5)" }
             },
             required: ["shape", "position", "color"]
+        }
+    },
+    {
+        name: "add_line_arrow",
+        description: "Adds a line or arrow for annotation.",
+        parameters: {
+            type: SchemaType.OBJECT,
+            properties: {
+                type: { type: SchemaType.STRING, enum: ["line", "arrow"], format: "enum" },
+                startPosition: { type: SchemaType.STRING, enum: ["top_left", "top_right", "bottom_left", "bottom_right", "center"], format: "enum" },
+                endPosition: { type: SchemaType.STRING, enum: ["top_right", "bottom_right", "bottom_left", "top_left", "center"], format: "enum" },
+                color: { type: SchemaType.STRING, description: "Stroke color" },
+                width: { type: SchemaType.NUMBER, description: "Stroke width (def 4)" }
+            },
+            required: ["type", "startPosition", "endPosition", "color"]
         }
     },
     {
@@ -74,6 +90,34 @@ export const tools: FunctionDeclaration[] = [
                 scale: { type: SchemaType.NUMBER, description: "Scale multiplier (default 1)" }
             },
             required: ["pathData", "color", "position"]
+        }
+    },
+    {
+        name: "update_object",
+        description: "Updates properties of an existing object on the canvas.",
+        parameters: {
+            type: SchemaType.OBJECT,
+            properties: {
+                id: { type: SchemaType.STRING, description: "The ID of the object to update." },
+                updates: {
+                    type: SchemaType.OBJECT,
+                    description: "Key-value pairs of properties to update.",
+                    properties: {
+                        fill: { type: SchemaType.STRING, description: "New color/fill" },
+                        opacity: { type: SchemaType.NUMBER },
+                        x: { type: SchemaType.NUMBER },
+                        y: { type: SchemaType.NUMBER },
+                        width: { type: SchemaType.NUMBER },
+                        height: { type: SchemaType.NUMBER },
+                        rotation: { type: SchemaType.NUMBER },
+                        text: { type: SchemaType.STRING },
+                        fontSize: { type: SchemaType.NUMBER },
+                        fontWeight: { type: SchemaType.STRING },
+                        zIndex: { type: SchemaType.NUMBER }
+                    }
+                }
+            },
+            required: ["id", "updates"]
         }
     }
 ];

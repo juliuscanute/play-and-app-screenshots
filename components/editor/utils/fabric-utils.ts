@@ -44,6 +44,70 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
         });
     }
 
+    if (obj.type === CanvasObjectType.Triangle) {
+        return new fabric.Triangle({
+            ...commonProps,
+            fill: typeof obj.fill === 'string' ? obj.fill : '#3B82F6'
+        });
+    }
+
+    if (obj.type === CanvasObjectType.Polygon) {
+        // Create a regular polygon points
+        const sides = (obj as any).sides || 5;
+        const radius = obj.width / 2;
+        const points = [];
+        for (let i = 0; i < sides; i++) {
+            const theta = (i / sides) * 2 * Math.PI;
+            const x = radius * Math.sin(theta);
+            const y = radius * -Math.cos(theta); // -cos to start at top
+            points.push({ x, y });
+        }
+
+        return new fabric.Polygon(points, {
+            ...commonProps,
+            fill: typeof obj.fill === 'string' ? obj.fill : '#10B981',
+            originX: 'center',
+            originY: 'center',
+            // Reposition because origin is center
+            left: obj.x + radius,
+            top: obj.y + radius
+        });
+    }
+
+    if (obj.type === CanvasObjectType.Line) {
+        // Line needs coordinates [x1, y1, x2, y2]
+        return new fabric.Line([(obj as any).x, (obj as any).y, (obj as any).x2, (obj as any).y2], {
+            ...commonProps,
+            fill: (obj as any).stroke || '#000000',
+            stroke: (obj as any).stroke || '#000000',
+            strokeWidth: (obj as any).strokeWidth || 4,
+            width: undefined, // Let coords define
+            height: undefined
+        });
+    }
+
+    if (obj.type === CanvasObjectType.Arrow) {
+        // Arrow is complex. For now, implement as a simple Path arrow
+        const fromX = (obj as any).x;
+        const fromY = (obj as any).y;
+        const toX = (obj as any).x2;
+        const toY = (obj as any).y2;
+
+        const headlen = 20; // length of head in pixels
+        const angle = Math.atan2(toY - fromY, toX - fromX);
+
+        // Path drawing command
+        const d = `M ${fromX} ${fromY} L ${toX} ${toY} L ${toX - headlen * Math.cos(angle - Math.PI / 6)} ${toY - headlen * Math.sin(angle - Math.PI / 6)} M ${toX} ${toY} L ${toX - headlen * Math.cos(angle + Math.PI / 6)} ${toY - headlen * Math.sin(angle + Math.PI / 6)}`;
+
+        return new fabric.Path(d, {
+            ...commonProps,
+            fill: '', // No fill for arrow lines usually
+            stroke: (obj as any).stroke || '#000000',
+            strokeWidth: (obj as any).strokeWidth || 4,
+            objectCaching: false
+        });
+    }
+
     if (obj.type === CanvasObjectType.Path && (obj as any).pathData) {
         // EXCLUDE width/height from props so Fabric calculates them from pathData
         const { width, height, ...pathProps } = commonProps;

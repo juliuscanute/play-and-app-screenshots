@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
 import { DeviceModel, CanvasObjectType } from '@/types/canvas';
-import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus } from 'lucide-react';
+import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { v4 as uuidv4 } from 'uuid';
 import PropertyPanel from './PropertyPanel';
@@ -23,7 +23,7 @@ export default function Sidebar() {
         setSize: () => { },
         setBackground,
         addObject,
-        updateObject: () => { },
+        updateObject,
         removeObject: () => { },
         setObjects: () => { },
         resetCanvas: () => { }
@@ -50,6 +50,43 @@ export default function Sidebar() {
         } catch (error) {
             console.error("Generation failed", error);
             alert("Failed to generate.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleBeautify = async () => {
+        if (!fabricCanvas) return;
+        setIsGenerating(true);
+
+        // Capture low-res screenshot for context
+        const dataURL = fabricCanvas.toDataURL({
+            format: 'png',
+            multiplier: 0.5,
+            quality: 0.8
+        });
+
+        const beautifyPrompt = prompt.trim()
+            ? `${prompt}. Also, act as a professional UX designer and beautify the design. Improve spacing, colors, and typography.`
+            : "Act as a professional UX designer. Analyze the screenshot and current state. Beautify the design by improving alignment, consistent spacing, color harmony, and typography. high-end finish.";
+
+        try {
+            const canvasState = { width, height, background, objects };
+            const res = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: beautifyPrompt, canvasState, image: dataURL }),
+            });
+
+            const data = await res.json();
+            if (data.toolCalls) {
+                data.toolCalls.forEach((call: any) => {
+                    executeToolCall(call.name, call.args, getStoreProxy() as any);
+                });
+            }
+        } catch (error) {
+            console.error("Beautify failed", error);
+            alert("Failed to beautify.");
         } finally {
             setIsGenerating(false);
         }
@@ -104,20 +141,23 @@ export default function Sidebar() {
                         onChange={(e) => setPrompt(e.target.value)}
                         disabled={isGenerating}
                     />
-                    <button
-                        onClick={handleGenerate}
-                        disabled={isGenerating || !prompt.trim()}
-                        className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {isGenerating ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Designing...
-                            </>
-                        ) : (
-                            "Generate"
-                        )}
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !prompt.trim()}
+                            className="flex-1 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
+                        </button>
+                        <button
+                            onClick={handleBeautify}
+                            disabled={isGenerating}
+                            className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                            title="Analyze current visual and beautify"
+                        >
+                            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4" /> Beautify</>}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Insert Tools */}
@@ -172,6 +212,105 @@ export default function Sidebar() {
                         >
                             <Circle className="w-5 h-5 text-red-500" />
                             <span className="text-xs">Circle</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: CanvasObjectType.Triangle,
+                                    x: width / 2 - 50,
+                                    y: height / 2 - 50,
+                                    width: 100,
+                                    height: 100,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    fill: '#3B82F6',
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Triangle className="w-5 h-5 text-blue-500" />
+                            <span className="text-xs">Triangle</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: CanvasObjectType.Polygon,
+                                    x: width / 2 - 50,
+                                    y: height / 2 - 50,
+                                    width: 100,
+                                    height: 100,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    fill: '#10B981',
+                                    sides: 6
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Hexagon className="w-5 h-5 text-green-500" />
+                            <span className="text-xs">Polygon</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: CanvasObjectType.Line,
+                                    x: width / 2 - 100,
+                                    y: height / 2,
+                                    x2: width / 2 + 100,
+                                    y2: height / 2,
+                                    width: 200,
+                                    height: 4,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    stroke: '#000000',
+                                    strokeWidth: 4
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <Minus className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            <span className="text-xs">Line</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const id = uuidv4();
+                                addObject({
+                                    id,
+                                    type: CanvasObjectType.Arrow,
+                                    x: width / 2 - 80,
+                                    y: height / 2,
+                                    x2: width / 2 + 80,
+                                    y2: height / 2,
+                                    width: 160,
+                                    height: 20,
+                                    rotation: 0,
+                                    opacity: 1,
+                                    zIndex: objects.length + 1,
+                                    stroke: '#000000',
+                                    strokeWidth: 4
+                                } as any);
+                                selectObject(id);
+                            }}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
+                        >
+                            <MoveRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            <span className="text-xs">Arrow</span>
                         </button>
 
                         <button

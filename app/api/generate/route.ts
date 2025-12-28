@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { prompt, canvasState } = await req.json();
+        const { prompt, canvasState, image } = await req.json();
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       You are an expert AI UI Designer for App Store Screenshots.
       The canvas size is ${canvasState.width}x${canvasState.height}.
       Your goal is to modify the canvas based on the user's request.
+      If an image is provided, analyze the current visual state to improve aesthetics (colors, layout, typography).
       Do not ask for clarification, just make the best design choice.
       Use the available tools. You can call multiple tools in one turn.
       Ensure high contrast.
@@ -34,7 +35,19 @@ export async function POST(req: Request) {
             ]
         });
 
-        const result = await chat.sendMessage(prompt);
+        const parts: any[] = [{ text: prompt }];
+        if (image) {
+            // Remove data:image/png;base64, prefix if present
+            const base64Data = image.includes('base64,') ? image.split('base64,')[1] : image;
+            parts.push({
+                inlineData: {
+                    mimeType: "image/png",
+                    data: base64Data
+                }
+            });
+        }
+
+        const result = await chat.sendMessage(parts);
         const response = await result.response;
         const functionCalls = response.functionCalls();
 

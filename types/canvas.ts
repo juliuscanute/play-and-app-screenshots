@@ -1,6 +1,10 @@
 export enum CanvasObjectType {
     Rect = 'rect',
     Circle = 'circle',
+    Triangle = 'triangle',
+    Polygon = 'polygon',
+    Line = 'line',
+    Arrow = 'arrow',
     Text = 'text',
     Image = 'image',
     Path = 'path',
@@ -20,11 +24,20 @@ export interface BaseObject {
     opacity: number;
     zIndex: number;
     fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
 }
 
 export interface ShapeObject extends BaseObject {
-    type: CanvasObjectType.Rect | CanvasObjectType.Circle;
-    cornerRadius?: number;
+    type: CanvasObjectType.Rect | CanvasObjectType.Circle | CanvasObjectType.Triangle | CanvasObjectType.Polygon;
+    cornerRadius?: number; // Only for Rect
+    sides?: number; // For Polygon
+}
+
+export interface LineObject extends BaseObject {
+    type: CanvasObjectType.Line | CanvasObjectType.Arrow;
+    x2: number; // End point relative to x
+    y2: number; // End point relative to y
 }
 
 export interface TextObject extends BaseObject {
@@ -68,7 +81,7 @@ export interface DeviceFrameObject extends BaseObject {
     };
 }
 
-export type CanvasObject = ShapeObject | TextObject | ImageObject | PathObject | DeviceFrameObject;
+export type CanvasObject = ShapeObject | LineObject | TextObject | ImageObject | PathObject | DeviceFrameObject;
 
 export interface CanvasStore {
     width: number;

@@ -43,13 +43,13 @@ export const executeToolCall = (
     }
 
     if (toolName === 'add_decorative_shape') {
-        const { shape, position, color, size } = args;
+        const { shape, position, color, size, sides } = args;
         const dimension = getSize(size || 'medium');
         const pos = getPosition(position, width, height, dimension, dimension);
 
-        const newShape: CanvasObject = {
+        const newShape: any = {
             id: uuidv4(),
-            type: shape as (CanvasObjectType.Rect | CanvasObjectType.Circle),
+            type: shape as any,
             x: pos.x,
             y: pos.y,
             width: dimension,
@@ -58,9 +58,34 @@ export const executeToolCall = (
             rotation: 0,
             opacity: 0.8,
             zIndex: 0,
-            cornerRadius: shape === CanvasObjectType.Rect ? 50 : 0
+            cornerRadius: shape === CanvasObjectType.Rect ? 50 : 0,
+            sides: shape === CanvasObjectType.Polygon ? (sides || 5) : undefined
         };
         store.addObject(newShape);
+    }
+
+    if (toolName === 'add_line_arrow') {
+        const { type, startPosition, endPosition, color, width: strokeWidth } = args;
+        // Simple mapping for demonstration
+        const start = getPosition(startPosition, width, height, 0, 0); // Point
+        const end = getPosition(endPosition, width, height, 0, 0);
+
+        const newLine: any = {
+            id: uuidv4(),
+            type: type === 'arrow' ? CanvasObjectType.Arrow : CanvasObjectType.Line,
+            x: start.x,
+            y: start.y,
+            x2: end.x,
+            y2: end.y,
+            width: Math.abs(end.x - start.x), // Bounding box approx
+            height: Math.abs(end.y - start.y),
+            stroke: color,
+            strokeWidth: strokeWidth || 5,
+            rotation: 0,
+            opacity: 1,
+            zIndex: 10
+        };
+        store.addObject(newLine);
     }
 
     if (toolName === 'add_text_overlay') {
@@ -150,5 +175,10 @@ export const executeToolCall = (
             zIndex: 1, // Above background
         };
         store.addObject(newPath);
+    }
+
+    if (toolName === 'update_object') {
+        const { id, updates } = args;
+        store.updateObject(id, updates);
     }
 };
