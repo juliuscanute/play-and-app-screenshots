@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Next.js: Debug Server-Side",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev --no-turbo"
+        },
+        {
+            "name": "Next.js: Debug Client-Side",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "sourceMapPathOverrides": {
+                "webpack://_N_E/*": "${webRoot}/*"
+            }
+        },
+        {
+            "name": "Next.js: Full Stack",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev --no-turbo",
+            "serverReadyAction": {
+                "pattern": "started server on .+, url: (https?://.+)",
+                "uriFormat": "%s",
+                "action": "debugWithChrome"
+            }
+        }
+    ]
+}
