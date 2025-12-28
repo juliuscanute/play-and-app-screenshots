@@ -94,19 +94,24 @@ export default function FabricCanvas() {
         });
 
         // ... (selection handlers remain same)
-        canvas.on('selection:created', (e: any) => {
-            console.log("Event: selection:created", e.selected?.map((o: any) => o.id));
-            if (e.selected && e.selected.length > 0) {
-                selectObject(e.selected[0].id);
-            }
-        });
+        const handleSelection = (e: any) => {
+            const selected = e.selected || (e.target ? [e.target] : []);
+            console.log("Event: selection", selected.map((o: any) => ({ id: o.id, type: o.type })));
 
-        canvas.on('selection:updated', (e: any) => {
-            console.log("Event: selection:updated", e.selected?.map((o: any) => o.id));
-            if (e.selected && e.selected.length > 0) {
-                selectObject(e.selected[0].id);
+            if (selected.length > 0) {
+                const id = selected[0].id;
+                if (id) {
+                    selectObject(id);
+                } else {
+                    console.error("CRITICAL: Selected object missing ID", selected[0]);
+                }
+            } else {
+                selectObject(null);
             }
-        });
+        };
+
+        canvas.on('selection:created', handleSelection);
+        canvas.on('selection:updated', handleSelection);
 
         canvas.on('selection:cleared', () => {
             console.log("Event: selection:cleared");

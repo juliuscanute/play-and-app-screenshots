@@ -89,19 +89,25 @@ export const executeToolCall = (
     }
 
     if (toolName === 'add_decorative_shape') {
-        const { shape, position, color, size, sides } = args;
+        const { shape, position, color, size, sides, x, y, rotation } = args;
         const dimension = getSize(size || 'medium');
-        const pos = getPosition(position, width, height, dimension, dimension);
+
+        // Calculate preset position first as fallback or base
+        const pos = getPosition(position || 'center', width, height, dimension, dimension);
+
+        // Use exact coords if provided, otherwise preset
+        const finalX = (x !== undefined && x !== null) ? x : pos.x;
+        const finalY = (y !== undefined && y !== null) ? y : pos.y;
 
         const newShape: any = {
             id: uuidv4(),
             type: shape as any,
-            x: pos.x,
-            y: pos.y,
+            x: finalX,
+            y: finalY,
             width: dimension,
             height: dimension,
             fill: color,
-            rotation: 0,
+            rotation: rotation || 0,
             opacity: 0.8,
             zIndex: 0,
             cornerRadius: shape === CanvasObjectType.Rect ? 50 : 0,
@@ -134,25 +140,35 @@ export const executeToolCall = (
     }
 
     if (toolName === 'add_text_overlay') {
-        const { content, style, position, color } = args;
-        const fontSize = style === 'title' ? 80 : style === 'subtitle' ? 50 : 30;
-        const wEstimate = content.length * (fontSize * 0.6);
-        const pos = getPosition(position, width, height, wEstimate, fontSize);
+        const { content, style, position, color, x, y, rotation, fontFamily, fontSize, fontWeight, fontStyle, underline } = args;
+
+        // Default size based on style if not provided
+        const finalFontSize = fontSize || (style === 'title' ? 80 : style === 'subtitle' ? 50 : 30);
+        const wEstimate = content.length * (finalFontSize * 0.6);
+        const pos = getPosition(position || 'center', width, height, wEstimate, finalFontSize);
+
+        const finalX = (x !== undefined && x !== null) ? x : pos.x;
+        const finalY = (y !== undefined && y !== null) ? y : pos.y;
+
+        // Default weight based on style if not provided
+        const finalFontWeight = fontWeight || (style === 'title' ? '900' : '400');
 
         const newText: CanvasObject = {
             id: uuidv4(),
             type: CanvasObjectType.Text,
             text: content,
-            x: pos.x,
-            y: pos.y,
+            x: finalX,
+            y: finalY,
             width: wEstimate,
-            height: fontSize,
+            height: finalFontSize,
             fill: color || '#000000',
-            fontFamily: 'Inter',
-            fontSize: fontSize,
-            fontWeight: style === 'title' ? '900' : '400',
+            fontFamily: fontFamily || 'Inter',
+            fontSize: finalFontSize,
+            fontWeight: finalFontWeight,
+            fontStyle: fontStyle || 'normal',
+            underline: underline || false,
             textAlign: 'center',
-            rotation: 0,
+            rotation: rotation || 0,
             zIndex: 10,
             opacity: 1
         };
@@ -176,13 +192,19 @@ export const executeToolCall = (
         const deviceHeight = 2000;
 
         if (!existingDevice) {
+
+            const defX = width / 2 - deviceWidth / 2;
+            const defY = height / 2 - deviceHeight / 2;
+            const finalX = (args.x !== undefined && args.x !== null) ? args.x : defX;
+            const finalY = (args.y !== undefined && args.y !== null) ? args.y : defY;
+
             const newDevice: DeviceFrameObject = {
                 id: uuidv4(),
                 type: CanvasObjectType.DeviceFrame,
                 deviceModel: args.model || 'iphone_15_pro',
                 frameColor: 'black',
-                x: width / 2 - deviceWidth / 2,
-                y: height / 2 - deviceHeight / 2,
+                x: finalX,
+                y: finalY,
                 width: deviceWidth,
                 height: deviceHeight,
                 rotation: args.rotation || 0,
@@ -192,31 +214,37 @@ export const executeToolCall = (
             };
             store.addObject(newDevice);
         } else {
-            store.updateObject(existingDevice.id, {
-                rotation: args.rotation,
-            });
+            const updates: any = {};
+            if (args.rotation !== undefined) updates.rotation = args.rotation;
+            if (args.x !== undefined) updates.x = args.x;
+            if (args.y !== undefined) updates.y = args.y;
+            // TODO: Handle tilt updates if needed in future, currently just position/rotation requested
+            store.updateObject(existingDevice.id, updates);
         }
     }
 
     if (toolName === 'add_vector_shape') {
-        const { pathData, name, color, position, scale } = args;
+        const { pathData, name, color, position, scale, x, y, rotation } = args;
 
         const baseSize = 300;
         const appliedScale = scale || 1;
         const finalSize = baseSize * appliedScale;
 
-        const pos = getPosition(position, width, height, finalSize, finalSize);
+        const pos = getPosition(position || 'center', width, height, finalSize, finalSize);
+
+        const finalX = (x !== undefined && x !== null) ? x : pos.x;
+        const finalY = (y !== undefined && y !== null) ? y : pos.y;
 
         const newPath: CanvasObject = {
             id: uuidv4(),
             type: CanvasObjectType.Path,
             pathData: pathData,
-            x: pos.x,
-            y: pos.y,
+            x: finalX,
+            y: finalY,
             width: finalSize,
             height: finalSize,
             fill: color,
-            rotation: 0,
+            rotation: rotation || 0,
             opacity: 1,
             zIndex: 1,
         };

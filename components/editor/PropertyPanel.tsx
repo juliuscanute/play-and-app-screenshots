@@ -1,108 +1,196 @@
 import React from 'react';
-import { CanvasObject, ShapeObject, TextObject } from '@/types/canvas';
-import { Trash2, Type, Square, Circle, Monitor, Image as ImageIcon, ChevronLeft } from 'lucide-react';
+import { CanvasObject, ShapeObject, TextObject, CanvasModel } from '@/types/canvas';
+import { Trash2, Type, Square, Circle, Monitor, Image as ImageIcon, ChevronLeft, Layout, Palette } from 'lucide-react';
 
 interface PropertyPanelProps {
-    object: CanvasObject;
+    object?: CanvasObject;
+    activeCanvas?: CanvasModel;
     updateObject: (id: string, updates: Partial<CanvasObject>) => void;
+    onUpdateCanvas?: (updates: { width?: number; height?: number; background?: string }) => void;
     onClose: () => void; // To deselect
     onDelete: () => void;
 }
 
-export default function PropertyPanel({ object, updateObject, onClose, onDelete }: PropertyPanelProps) {
+export default function PropertyPanel({ object, activeCanvas, updateObject, onUpdateCanvas, onClose, onDelete }: PropertyPanelProps) {
 
     // Helper to generic updates
     const handleChange = (key: keyof CanvasObject, value: any) => {
-        updateObject(object.id, { [key]: value });
+        if (object) updateObject(object.id, { [key]: value });
     };
 
     // Helper for specific type updates
     const handleSpecificChange = (updates: any) => {
-        updateObject(object.id, updates);
+        if (object) updateObject(object.id, updates);
     };
 
     const renderHeader = () => {
         let Icon = Square;
         let title = "Object";
 
-        if (object.type === 'rect') { Icon = Square; title = "Rectangle"; }
-        if (object.type === 'circle') { Icon = Circle; title = "Circle"; }
-        if (object.type === 'text') { Icon = Type; title = "Text"; }
-        if (object.type === 'device_frame') { Icon = Monitor; title = "Device"; }
-        if (object.type === 'image') { Icon = ImageIcon; title = "Image"; }
+        if (!object && activeCanvas) {
+            Icon = Layout;
+            title = "Canvas Settings";
+        } else if (object) {
+            if (object.type === 'rect') { Icon = Square; title = "Rectangle"; }
+            if (object.type === 'circle') { Icon = Circle; title = "Circle"; }
+            if (object.type === 'text') { Icon = Type; title = "Text"; }
+            if (object.type === 'device_frame') { Icon = Monitor; title = "Device"; }
+            if (object.type === 'image') { Icon = ImageIcon; title = "Image"; }
+        }
 
         return (
             <div className="flex items-center gap-2 mb-6 text-gray-800 dark:text-gray-200">
-                <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded mr-2">
-                    <ChevronLeft className="w-4 h-4" />
-                </button>
+                {object && (
+                    <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded mr-2">
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                )}
                 <Icon className="w-4 h-4 text-blue-500" />
                 <span className="font-semibold text-sm">{title}</span>
             </div>
         );
     };
 
-    const renderCommon = () => (
-        <div className="space-y-4 mb-6">
-            <div className="grid grid-cols-2 gap-2">
-                <div>
-                    <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">X Position</label>
-                    <input
-                        type="number"
-                        value={Math.round(object.x)}
-                        onChange={(e) => handleChange('x', Number(e.target.value))}
-                        className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Y Position</label>
-                    <input
-                        type="number"
-                        value={Math.round(object.y)}
-                        onChange={(e) => handleChange('y', Number(e.target.value))}
-                        className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Width</label>
-                    <input
-                        type="number"
-                        value={Math.round(object.width)}
-                        onChange={(e) => handleChange('width', Number(e.target.value))}
-                        className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Height</label>
-                    <input
-                        type="number"
-                        value={Math.round(object.height)}
-                        onChange={(e) => handleChange('height', Number(e.target.value))}
-                        className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
-                    />
-                </div>
-            </div>
+    const renderCanvasProps = () => {
+        if (!activeCanvas || !onUpdateCanvas) return null;
 
-            <div>
-                <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block flex justify-between">
-                    <span>Opacity</span>
-                    <span>{Math.round((object.opacity || 1) * 100)}%</span>
-                </label>
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={object.opacity || 1}
-                    onChange={(e) => handleChange('opacity', Number(e.target.value))}
-                    className="w-full accent-blue-500"
-                />
+        return (
+            <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 block flex items-center gap-2">
+                        <Layout className="w-3 h-3" />
+                        Dimensions
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-[10px] text-gray-400 mb-1 block">Width</label>
+                            <input
+                                type="number"
+                                value={activeCanvas.width}
+                                onChange={(e) => onUpdateCanvas({ width: Number(e.target.value) })}
+                                className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs font-mono"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-gray-400 mb-1 block">Height</label>
+                            <input
+                                type="number"
+                                value={activeCanvas.height}
+                                onChange={(e) => onUpdateCanvas({ height: Number(e.target.value) })}
+                                className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs font-mono"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 block flex items-center gap-2">
+                        <Palette className="w-3 h-3" />
+                        Background
+                    </label>
+                    <div className="flex gap-2 items-center bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
+                        <input
+                            type="color"
+                            value={activeCanvas.background}
+                            onChange={(e) => onUpdateCanvas({ background: e.target.value })}
+                            className="w-8 h-8 p-0 border-0 rounded overflow-hidden cursor-pointer"
+                        />
+                        <input
+                            type="text"
+                            value={activeCanvas.background}
+                            onChange={(e) => onUpdateCanvas({ background: e.target.value })}
+                            className="flex-1 p-1 bg-transparent border-none text-xs font-mono focus:outline-none"
+                        />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                        {['#ffffff', '#000000', '#F3F4F6', '#1F2937', '#EEF2FF', '#FAE8FF'].map(color => (
+                            <button
+                                key={color}
+                                onClick={() => onUpdateCanvas({ background: color })}
+                                className="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm transition-transform hover:scale-110"
+                                style={{ backgroundColor: color }}
+                                title={color}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
+
+    const renderCommon = () => {
+        if (!object) return null;
+        return (
+            <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 gap-2">
+                    <div>
+                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">X Position</label>
+                        <input
+                            type="number"
+                            value={object.x}
+                            onChange={(e) => handleChange('x', Number(e.target.value))}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Y Position</label>
+                        <input
+                            type="number"
+                            value={object.y}
+                            onChange={(e) => handleChange('y', Number(e.target.value))}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Width</label>
+                        <input
+                            type="number"
+                            value={object.width}
+                            onChange={(e) => handleChange('width', Number(e.target.value))}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Height</label>
+                        <input
+                            type="number"
+                            value={object.height}
+                            onChange={(e) => handleChange('height', Number(e.target.value))}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Rotation (deg)</label>
+                        <input
+                            type="number"
+                            value={object.rotation || 0}
+                            onChange={(e) => handleChange('rotation', Number(e.target.value))}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block flex justify-between">
+                        <span>Opacity</span>
+                        <span>{Math.round((object.opacity || 1) * 100)}%</span>
+                    </label>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={object.opacity || 1}
+                        onChange={(e) => handleChange('opacity', Number(e.target.value))}
+                        className="w-full accent-blue-500"
+                    />
+                </div>
+            </div>
+        );
+    };
 
     const renderShapeProps = () => {
-        if (object.type !== 'rect' && object.type !== 'circle') return null;
+        if (!object || (object.type !== 'rect' && object.type !== 'circle')) return null;
         const shape = object as ShapeObject;
 
         return (
@@ -145,7 +233,7 @@ export default function PropertyPanel({ object, updateObject, onClose, onDelete 
     };
 
     const renderTextProps = () => {
-        if (object.type !== 'text') return null;
+        if (!object || object.type !== 'text') return null;
         const text = object as TextObject;
 
         return (
@@ -248,7 +336,7 @@ export default function PropertyPanel({ object, updateObject, onClose, onDelete 
     };
 
     const renderDeviceProps = () => {
-        if (object.type !== 'device_frame') return null;
+        if (!object || object.type !== 'device_frame') return null;
 
         const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];
@@ -306,21 +394,24 @@ export default function PropertyPanel({ object, updateObject, onClose, onDelete 
             {renderHeader()}
 
             <div className="flex-1 overflow-y-auto pr-2">
+                {renderCanvasProps()}
                 {renderCommon()}
                 {renderShapeProps()}
                 {renderTextProps()}
                 {renderDeviceProps()}
             </div>
 
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <button
-                    onClick={onDelete}
-                    className="w-full py-2 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Object
-                </button>
-            </div>
+            {object && (
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <button
+                        onClick={onDelete}
+                        className="w-full py-2 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Object
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

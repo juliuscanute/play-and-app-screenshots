@@ -153,12 +153,33 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     },
 
     resetCanvas: () => {
+        set((state) => ({
+            canvases: state.canvases.map(c =>
+                c.id === state.activeCanvasId ? {
+                    ...c,
+                    objects: [],
+                    background: '#ffffff',
+                    width: 1080,
+                    height: 1920
+                } : c
+            ),
+            selectedObjectId: null
+        }));
+    },
+
+    loadProject: (canvases, activeCanvasId) => {
         set({
-            objects: [],
-            selectedObjectId: null,
-            background: '#ffffff',
-            width: 1080,
-            height: 1920
+            canvases,
+            activeCanvasId,
+            selectedObjectId: null
         });
+    },
+
+    renameCanvas: (id, name) => {
+        set((state) => ({
+            canvases: state.canvases.map(c =>
+                c.id === id ? { ...c, name } : c
+            )
+        }));
     }
 }));

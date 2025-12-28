@@ -28,9 +28,12 @@ export const tools: FunctionDeclaration[] = [
                 position: { type: SchemaType.STRING, enum: ["top_left", "top_right", "bottom_left", "bottom_right", "center_behind_phone", "random", "top_center", "bottom_center", "center_left", "center_right"], format: "enum" },
                 color: { type: SchemaType.STRING, description: "Hex code or 'accent'." },
                 size: { type: SchemaType.STRING, enum: ["small", "medium", "large"], format: "enum" },
-                sides: { type: SchemaType.NUMBER, description: "Number of sides for polygon (def 5)" }
+                sides: { type: SchemaType.NUMBER, description: "Number of sides for polygon (def 5)" },
+                x: { type: SchemaType.NUMBER, description: "Optional exact X coordinate. Overrides position." },
+                y: { type: SchemaType.NUMBER, description: "Optional exact Y coordinate. Overrides position." },
+                rotation: { type: SchemaType.NUMBER, description: "Rotation in degrees" }
             },
-            required: ["shape", "position", "color"]
+            required: ["shape", "color"]
         }
     },
     {
@@ -57,9 +60,17 @@ export const tools: FunctionDeclaration[] = [
                 content: { type: SchemaType.STRING, description: "The text string to display" },
                 style: { type: SchemaType.STRING, enum: ["title", "subtitle", "caption"], format: "enum" },
                 position: { type: SchemaType.STRING, enum: ["top", "bottom", "center"], format: "enum" },
-                color: { type: SchemaType.STRING, description: "Hex code for text color" }
+                color: { type: SchemaType.STRING, description: "Hex code for text color" },
+                x: { type: SchemaType.NUMBER, description: "Optional exact X coordinate. Overrides position." },
+                y: { type: SchemaType.NUMBER, description: "Optional exact Y coordinate. Overrides position." },
+                rotation: { type: SchemaType.NUMBER, description: "Rotation in degrees" },
+                fontFamily: { type: SchemaType.STRING, enum: ["Inter", "Arial", "Helvetica", "Times New Roman", "Courier New", "Georgia", "Verdana"], format: "enum" },
+                fontSize: { type: SchemaType.NUMBER, description: "Font size in pixels" },
+                fontWeight: { type: SchemaType.STRING, enum: ["normal", "bold"], format: "enum" },
+                fontStyle: { type: SchemaType.STRING, enum: ["normal", "italic"], format: "enum" },
+                underline: { type: SchemaType.BOOLEAN, description: "Underline text" }
             },
-            required: ["content", "style", "position"]
+            required: ["content", "style"]
         }
     },
     {
@@ -73,7 +84,9 @@ export const tools: FunctionDeclaration[] = [
                 tiltX: { type: SchemaType.NUMBER, description: "3D tilt on X axis (for perspective)" },
                 tiltY: { type: SchemaType.NUMBER, description: "3D tilt on Y axis" },
                 y_position: { type: SchemaType.STRING, enum: ["bottom_peeking", "center", "floating"], format: "enum" },
-                model: { type: SchemaType.STRING, enum: ["iphone_15_pro", "pixel_10"], format: "enum", description: "Device model frame to use." }
+                model: { type: SchemaType.STRING, enum: ["iphone_15_pro", "pixel_10"], format: "enum", description: "Device model frame to use." },
+                x: { type: SchemaType.NUMBER, description: "Exact X position. Overrides preset." },
+                y: { type: SchemaType.NUMBER, description: "Exact Y position. Overrides preset." }
             }
         }
     },
@@ -87,9 +100,12 @@ export const tools: FunctionDeclaration[] = [
                 name: { type: SchemaType.STRING, description: "Name of the shape for identification (e.g. 'red_star')" },
                 color: { type: SchemaType.STRING, description: "Fill color (Hex)" },
                 position: { type: SchemaType.STRING, enum: ["top_left", "top_right", "bottom_left", "bottom_right", "center", "random"], format: "enum" },
-                scale: { type: SchemaType.NUMBER, description: "Scale multiplier (default 1)" }
+                scale: { type: SchemaType.NUMBER, description: "Scale multiplier (default 1)" },
+                x: { type: SchemaType.NUMBER, description: "Exact X position. Overrides position." },
+                y: { type: SchemaType.NUMBER, description: "Exact Y position. Overrides position." },
+                rotation: { type: SchemaType.NUMBER, description: "Rotation in degrees" }
             },
-            required: ["pathData", "color", "position"]
+            required: ["pathData", "color"]
         }
     },
     {
@@ -105,11 +121,11 @@ export const tools: FunctionDeclaration[] = [
                     properties: {
                         fill: { type: SchemaType.STRING, description: "New color/fill" },
                         opacity: { type: SchemaType.NUMBER },
-                        x: { type: SchemaType.NUMBER },
-                        y: { type: SchemaType.NUMBER },
+                        x: { type: SchemaType.NUMBER, description: "Exact X position (no rounding)" },
+                        y: { type: SchemaType.NUMBER, description: "Exact Y position (no rounding)" },
                         width: { type: SchemaType.NUMBER },
                         height: { type: SchemaType.NUMBER },
-                        rotation: { type: SchemaType.NUMBER },
+                        rotation: { type: SchemaType.NUMBER, description: "Rotation in degrees (0-360)" },
                         text: { type: SchemaType.STRING },
                         fontSize: { type: SchemaType.NUMBER },
                         fontWeight: { type: SchemaType.STRING },

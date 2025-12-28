@@ -5,7 +5,7 @@ import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
 import { DeviceModel, CanvasObjectType } from '@/types/canvas';
 
-import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus, Copy } from 'lucide-react';
+import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus, Copy, Save, Upload, Trash2, Pencil, Check, X } from 'lucide-react';
 
 import { useTheme } from '@/components/ThemeProvider';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,7 +15,8 @@ export default function Sidebar() {
 
     const {
         canvases, activeCanvasId, setActiveCanvas, addCanvas, duplicateCanvas, removeCanvas,
-        setBackground, fabricCanvas, setSize, updateObject, selectObject, addObject: storeAddObject
+        setBackground, fabricCanvas, setSize, updateObject, selectObject, addObject: storeAddObject,
+        loadProject, renameCanvas
     } = useCanvasStore();
 
     // Resolve Active Canvas
@@ -35,6 +36,28 @@ export default function Sidebar() {
 
     const selectedObjectId = useCanvasStore((state: any) => state.selectedObjectId);
     const selectedObject = objects.find(o => o.id === selectedObjectId);
+
+    const [isRenaming, setIsRenaming] = useState(false);
+    const [renameValue, setRenameValue] = useState('');
+
+    const startRenaming = () => {
+        if (activeCanvas) {
+            setRenameValue(activeCanvas.name);
+            setIsRenaming(true);
+        }
+    };
+
+    const saveRename = () => {
+        if (activeCanvasId && renameValue.trim()) {
+            renameCanvas(activeCanvasId, renameValue.trim());
+            setIsRenaming(false);
+        }
+    };
+
+    const cancelRename = () => {
+        setIsRenaming(false);
+        setRenameValue('');
+    };
 
     // CRITICAL: This proxy creates a "fake" single-canvas store view for the executor and API
     // ensuring they operate ONLY on the active canvas.
@@ -139,8 +162,95 @@ export default function Sidebar() {
         document.body.removeChild(link);
     };
 
+    const [fileHandle, setFileHandle] = useState<any>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleSaveProject = async () => {
+        const projectData = {
+            canvases: useCanvasStore.getState().canvases,
+            activeCanvasId: useCanvasStore.getState().activeCanvasId,
+            version: "1.0"
+        };
+        const jsonString = JSON.stringify(projectData, null, 2);
+
+        if (fileHandle) {
+            try {
+                const writable = await fileHandle.createWritable();
+                await writable.write(jsonString);
+                await writable.close();
+                alert("Project saved!");
+                return;
+            } catch (err) {
+                console.error("Failed to save to file handle:", err);
+                // Fallback to download if save fails
+            }
+        }
+
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `project-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setFileHandle(null); // Reset handle for normal file uploads
+        readFileAndLoad(file);
+    };
+
+    const handleOpenProject = async () => {
+        if ('showOpenFilePicker' in window) {
+            try {
+                const [handle] = await (window as any).showOpenFilePicker({
+                    types: [{
+                        description: 'JSON Files',
+                        accept: { 'application/json': ['.json'] },
+                    }],
+                });
+                const file = await handle.getFile();
+                setFileHandle(handle);
+                readFileAndLoad(file);
+            } catch (err) {
+                console.error("File picker cancelled or failed", err);
+            }
+        } else {
+            fileInputRef.current?.click();
+        }
+    };
+
+    const readFileAndLoad = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const projectData = JSON.parse(event.target?.result as string);
+                if (projectData.canvases && projectData.activeCanvasId) {
+                    loadProject(projectData.canvases, projectData.activeCanvasId);
+                } else {
+                    alert('Invalid project file');
+                }
+            } catch (error) {
+                console.error('Error loading project', error);
+                alert('Failed to load project');
+            }
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full shadow-xl z-20 font-sans transition-colors duration-200">
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleLoadProject}
+                className="hidden"
+                accept=".json"
+            />
             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                 <div>
                     <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -158,21 +268,62 @@ export default function Sidebar() {
 
             {/* Canvas Switcher */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">
-                    Canvases
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Canvases
+                    </label>
+                    {!isRenaming ? (
+                        <button
+                            onClick={startRenaming}
+                            className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                            title="Rename Canvas"
+                        >
+                            <Pencil className="w-3 h-3" />
+                        </button>
+                    ) : (
+                        <div className="flex gap-1">
+                            <button
+                                onClick={saveRename}
+                                className="p-1 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                            >
+                                <Check className="w-3 h-3" />
+                            </button>
+                            <button
+                                onClick={cancelRename}
+                                className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex flex-col gap-2">
-                    <select
-                        value={activeCanvasId || ''}
-                        onChange={(e) => setActiveCanvas(e.target.value)}
-                        className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
-                    >
-                        {canvases.map(canvas => (
-                            <option key={canvas.id} value={canvas.id}>
-                                {canvas.name}
-                            </option>
-                        ))}
-                    </select>
+                    {isRenaming ? (
+                        <input
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-2 border-blue-500 rounded-lg text-sm focus:outline-none text-gray-800 dark:text-gray-200"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveRename();
+                                if (e.key === 'Escape') cancelRename();
+                            }}
+                        />
+                    ) : (
+                        <select
+                            value={activeCanvasId || ''}
+                            onChange={(e) => setActiveCanvas(e.target.value)}
+                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
+                        >
+                            {canvases.map(canvas => (
+                                <option key={canvas.id} value={canvas.id}>
+                                    {canvas.name}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                     <div className="flex gap-2">
                         <button
                             onClick={() => addCanvas()}
@@ -185,6 +336,13 @@ export default function Sidebar() {
                             className="flex-1 py-1.5 px-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 transition-colors flex items-center justify-center gap-1"
                         >
                             <Copy className="w-3 h-3" /> Duplicate
+                        </button>
+                        <button
+                            onClick={() => activeCanvasId && removeCanvas(activeCanvasId)}
+                            disabled={canvases.length <= 1}
+                            className="flex-1 py-1.5 px-3 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Trash2 className="w-3 h-3" /> Delete
                         </button>
                     </div>
                 </div>
@@ -614,7 +772,22 @@ export default function Sidebar() {
 
 
 
-
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                        <button
+                            onClick={handleSaveProject}
+                            className="py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <Save className="w-4 h-4" />
+                            Save
+                        </button>
+                        <button
+                            onClick={handleOpenProject}
+                            className="py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <Upload className="w-4 h-4" />
+                            Load
+                        </button>
+                    </div>
                     <button
                         onClick={handleExport}
                         className="w-full py-2 bg-gray-900 dark:bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-900 flex items-center justify-center gap-2"

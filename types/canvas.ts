@@ -115,5 +115,7 @@ export interface CanvasStore {
     setObjects: (objects: CanvasObject[]) => void;
     setFabricCanvas: (canvas: any) => void;
     resetCanvas: () => void;
+    loadProject: (canvases: CanvasModel[], activeCanvasId: string) => void;
+    renameCanvas: (id: string, name: string) => void;
 }
 
