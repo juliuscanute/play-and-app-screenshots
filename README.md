@@ -7,7 +7,7 @@ A powerful web-based tool for creating professional App Store and Play Store scr
 ## Features
 
 - **Device Frames**: High-quality vector frames for the latest devices:
-    - iPhone 16 Pro & Max
+    - iPhone 17 Pro
     - Google Pixel 9
     - Samsung Galaxy S24 Ultra
     - iPad Pro 13"

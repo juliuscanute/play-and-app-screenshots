@@ -1,11 +1,11 @@
 // Device Frame SVGs
 // We use a transparent rect at the bottom to ensure Fabric calculates the bounding box correctly.
 
-export const IPHONE_16_PRO_SVG = `
-<svg width="433" height="932" viewBox="0 0 433 932" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="433" height="932" fill="transparent" opacity="0"/>
-    <path d="M0 65C0 29.1015 29.1015 0 65 0H368C403.899 0 433 29.1015 433 65V867C433 902.899 403.899 932 368 932H65C29.1015 932 0 902.899 0 867V65Z" fill="none" stroke="#333333" stroke-width="8"/>
-    <path d="M125 0H305V35C305 45 295 55 285 55H145C135 55 125 45 125 35V0Z" fill="black"/>
+export const IPHONE_17_PRO_SVG = `
+<svg width="442" height="914" viewBox="0 0 442 914" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="442" height="914" fill="transparent" opacity="0"/>
+    <rect x="4" y="4" width="434" height="906" rx="64" fill="none" stroke="#222222" stroke-width="8"/>
+    <rect x="158" y="18" width="126" height="37" rx="18" fill="black"/>
 </svg>
 `;
 
@@ -50,5 +50,5 @@ export const getDeviceFrameSVG = (model: DeviceModel | string) => {
     if (m === DeviceModel.SamsungS24 || m.includes('samsung') || m.includes('galaxy')) return SAMSUNG_S24_SVG;
     if (m === DeviceModel.iPadPro13 || m.includes('ipad')) return IPAD_PRO_SVG;
     if (m === DeviceModel.AndroidTablet || m.includes('android_tablet') || m.includes('tablet')) return ANDROID_TABLET_SVG;
-    return IPHONE_16_PRO_SVG;
+    return IPHONE_17_PRO_SVG;
 };

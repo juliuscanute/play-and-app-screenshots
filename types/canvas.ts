@@ -62,7 +62,7 @@ export interface PathObject extends BaseObject {
 }
 
 export enum DeviceModel {
-    iPhone16Pro = 'iphone_16_pro',
+    iPhone17Pro = 'iphone_17_pro',
     Pixel9 = 'pixel_9',
     SamsungS24 = 'samsung_s24',
     iPadPro13 = 'ipad_pro_13',

@@ -204,8 +204,10 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
                             screenPadding = 30; // Thicker bezel for Tablet
                         } else if (model === DeviceModel.AndroidTablet || model.includes('tablet')) {
                             screenPadding = 30; // Thicker bezel for Tablet
+                        } else if (model === DeviceModel.iPhone17Pro || model.includes('iphone') || model.includes('iPhone')) {
+                            screenPadding = 8; // Reduce padding to 8 (4px on each side) to fit tight against the 8px centered stroke (4px inner)
                         } else {
-                            screenPadding = 19; // iPhone
+                            screenPadding = 19; // Default
                         }
 
                         const targetWidth = frameWidth - screenPadding;
@@ -255,8 +257,8 @@ export const createFabricObject = async (obj: CanvasObject): Promise<fabric.Obje
                             clipRadius = 10; // S24 has sharper corners (SVG rx=12)
                         } else if (model === DeviceModel.Pixel9 || model.includes('pixel')) {
                             clipRadius = 22; // Pixel 9 (SVG rx=24)
-                        } else if (model === DeviceModel.iPhone16Pro || model.includes('iphone')) {
-                            clipRadius = 46; // iPhone 16 (approx rx=55)
+                        } else if (model === DeviceModel.iPhone17Pro || model.includes('iphone')) {
+                            clipRadius = 60; // iPhone 17 (rx=64 - 4px stroke = 60 inner)
                         } else if (model === DeviceModel.iPadPro13 || model.includes('ipad')) {
                             clipRadius = 20; // iPad Pro (SVG rx=24)
                         } else if (model === DeviceModel.AndroidTablet || model.includes('tablet')) {

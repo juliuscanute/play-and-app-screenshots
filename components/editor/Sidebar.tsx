@@ -5,7 +5,7 @@ import { useCanvasStore } from '@/store/canvas-store';
 import { executeToolCall } from '@/lib/gemini/executor';
 import { DeviceModel, CanvasObjectType } from '@/types/canvas';
 
-import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus, Copy, Save, Upload, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Loader2, Sparkles, Download, Settings, Moon, Sun, Square, Circle, Type, Smartphone, Tablet, Plus, Wand2, Triangle, Hexagon, MoveRight, Minus, Copy, Save, Upload, Trash2, Pencil, Check, X, Lock, Unlock } from 'lucide-react';
 
 import { useTheme } from '@/components/ThemeProvider';
 import { v4 as uuidv4 } from 'uuid';
@@ -39,6 +39,7 @@ export default function Sidebar() {
 
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState('');
+    const [lockAspectRatio, setLockAspectRatio] = useState(true);
 
     const startRenaming = () => {
         if (activeCanvas) {
@@ -639,7 +640,7 @@ export default function Sidebar() {
                                     rotation: 0,
                                     opacity: 1,
                                     zIndex: objects.length + 1,
-                                    deviceModel: DeviceModel.iPhone16Pro,
+                                    deviceModel: DeviceModel.iPhone17Pro,
                                     frameColor: 'titanium'
                                 } as any);
                                 selectObject(id);
@@ -647,7 +648,7 @@ export default function Sidebar() {
                             className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 transition-colors"
                         >
                             <Smartphone className="w-5 h-5 text-gray-800 dark:text-gray-200" />
-                            <span className="text-xs">iPhone 16</span>
+                            <span className="text-xs">iPhone 17</span>
                         </button>
 
                         <button
@@ -759,22 +760,47 @@ export default function Sidebar() {
                     </label>
 
                     {/* Manual Inputs */}
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div>
+                    <div className="flex items-end gap-2 mb-4">
+                        <div className="flex-1">
                             <label className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 block">Width</label>
                             <input
                                 type="number"
                                 value={width}
-                                onChange={(e) => setSize(Number(e.target.value), height)}
+                                onChange={(e) => {
+                                    const newWidth = Number(e.target.value);
+                                    let newHeight = height;
+                                    if (lockAspectRatio && width > 0) {
+                                        const aspect = width / height;
+                                        newHeight = Math.round(newWidth / aspect);
+                                    }
+                                    setSize(newWidth, newHeight);
+                                }}
                                 className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        <div>
+
+                        <button
+                            onClick={() => setLockAspectRatio(!lockAspectRatio)}
+                            className={`p-2 mb-0.5 rounded-md transition-colors ${lockAspectRatio ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                            title={lockAspectRatio ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
+                        >
+                            {lockAspectRatio ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                        </button>
+
+                        <div className="flex-1">
                             <label className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 block">Height</label>
                             <input
                                 type="number"
                                 value={height}
-                                onChange={(e) => setSize(width, Number(e.target.value))}
+                                onChange={(e) => {
+                                    const newHeight = Number(e.target.value);
+                                    let newWidth = width;
+                                    if (lockAspectRatio && height > 0) {
+                                        const aspect = width / height;
+                                        newWidth = Math.round(newHeight * aspect);
+                                    }
+                                    setSize(newWidth, newHeight);
+                                }}
                                 className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CanvasObject, ShapeObject, TextObject, CanvasModel } from '@/types/canvas';
-import { Trash2, Type, Square, Circle, Monitor, Image as ImageIcon, ChevronLeft, Layout, Palette } from 'lucide-react';
+import { Trash2, Type, Square, Circle, Monitor, Image as ImageIcon, ChevronLeft, Layout, Palette, Lock, Unlock } from 'lucide-react';
 
 interface PropertyPanelProps {
     object?: CanvasObject;
@@ -12,6 +12,9 @@ interface PropertyPanelProps {
 }
 
 export default function PropertyPanel({ object, activeCanvas, updateObject, onUpdateCanvas, onClose, onDelete }: PropertyPanelProps) {
+
+    const [lockCanvasRatio, setLockCanvasRatio] = React.useState(true);
+    const [lockObjectRatio, setLockObjectRatio] = React.useState(true);
 
     // Helper to generic updates
     const handleChange = (key: keyof CanvasObject, value: any) => {
@@ -61,25 +64,70 @@ export default function PropertyPanel({ object, activeCanvas, updateObject, onUp
                         <Layout className="w-3 h-3" />
                         Dimensions
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
+                    <div className="flex items-end gap-2">
+                        <div className="flex-1">
                             <label className="text-[10px] text-gray-400 mb-1 block">Width</label>
                             <input
                                 type="number"
                                 value={activeCanvas.width}
-                                onChange={(e) => onUpdateCanvas({ width: Number(e.target.value) })}
+                                onChange={(e) => {
+                                    const newW = Number(e.target.value);
+                                    const updates: any = { width: newW };
+                                    if (lockCanvasRatio && activeCanvas.height) {
+                                        const aspect = activeCanvas.width / activeCanvas.height;
+                                        updates.height = Math.round(newW / aspect);
+                                    }
+                                    onUpdateCanvas(updates);
+                                }}
                                 className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs font-mono"
                             />
                         </div>
-                        <div>
+
+                        <button
+                            onClick={() => setLockCanvasRatio(!lockCanvasRatio)}
+                            className={`p-2 mb-0.5 rounded-md transition-colors ${lockCanvasRatio ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                        >
+                            {lockCanvasRatio ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                        </button>
+
+                        <div className="flex-1">
                             <label className="text-[10px] text-gray-400 mb-1 block">Height</label>
                             <input
                                 type="number"
                                 value={activeCanvas.height}
-                                onChange={(e) => onUpdateCanvas({ height: Number(e.target.value) })}
+                                onChange={(e) => {
+                                    const newH = Number(e.target.value);
+                                    const updates: any = { height: newH };
+                                    if (lockCanvasRatio && activeCanvas.width) {
+                                        const aspect = activeCanvas.width / activeCanvas.height;
+                                        updates.width = Math.round(newH * aspect);
+                                    }
+                                    onUpdateCanvas(updates);
+                                }}
                                 className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs font-mono"
                             />
                         </div>
+                    </div>
+                    {/* Aspect Ratio Presets */}
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                        {[
+                            { label: '9:16', value: 9 / 16 },
+                            { label: '19.5:9', value: 9 / 19.5 },
+                            { label: '3:4', value: 3 / 4 },
+                            { label: '1:1', value: 1 },
+                        ].map((ratio) => (
+                            <button
+                                key={ratio.label}
+                                onClick={() => {
+                                    if (activeCanvas.width) {
+                                        onUpdateCanvas({ height: Math.round(activeCanvas.width / ratio.value) });
+                                    }
+                                }}
+                                className="px-2 py-1 text-[10px] bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400 transition-colors"
+                            >
+                                {ratio.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -141,23 +189,71 @@ export default function PropertyPanel({ object, activeCanvas, updateObject, onUp
                             className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
                         />
                     </div>
-                    <div>
-                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Width</label>
-                        <input
-                            type="number"
-                            value={object.width}
-                            onChange={(e) => handleChange('width', Number(e.target.value))}
-                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
-                        />
+                    <div className="col-span-2 flex items-end gap-2">
+                        <div className="flex-1">
+                            <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Width</label>
+                            <input
+                                type="number"
+                                value={Math.round(object.width!)}
+                                onChange={(e) => {
+                                    const newW = Number(e.target.value);
+                                    const updates: any = { width: newW };
+                                    if (lockObjectRatio && object.height && object.width) {
+                                        const aspect = object.width / object.height;
+                                        updates.height = Math.round(newW / aspect);
+                                    }
+                                    updateObject(object.id, updates);
+                                }}
+                                className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => setLockObjectRatio(!lockObjectRatio)}
+                            className={`p-2 mb-0.5 rounded-md transition-colors ${lockObjectRatio ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                        >
+                            {lockObjectRatio ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                        </button>
+
+                        <div className="flex-1">
+                            <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Height</label>
+                            <input
+                                type="number"
+                                value={Math.round(object.height!)}
+                                onChange={(e) => {
+                                    const newH = Number(e.target.value);
+                                    const updates: any = { height: newH };
+                                    if (lockObjectRatio && object.width && object.height) {
+                                        const aspect = object.width / object.height;
+                                        updates.width = Math.round(newH * aspect);
+                                    }
+                                    updateObject(object.id, updates);
+                                }}
+                                className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Height</label>
-                        <input
-                            type="number"
-                            value={object.height}
-                            onChange={(e) => handleChange('height', Number(e.target.value))}
-                            className="w-full p-2 bg-gray-50 dark:bg-gray-800 border-none rounded text-xs"
-                        />
+                    {/* Aspect Ratio Presets */}
+                    <div className="col-span-2 flex gap-1 flex-wrap">
+                        {[
+                            { label: '19.5:9', value: 9 / 19.5 },
+                            { label: '9:16', value: 9 / 16 },
+                            { label: '3:4', value: 3 / 4 },
+                            { label: '4:3', value: 4 / 3 },
+                            { label: '1:1', value: 1 },
+                        ].map((ratio) => (
+                            <button
+                                key={ratio.label}
+                                onClick={() => {
+                                    if (object.width) {
+                                        updateObject(object.id, { height: Math.round(object.width / ratio.value) });
+                                    }
+                                }}
+                                className="px-2 py-1 text-[10px] bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400 transition-colors"
+                            >
+                                {ratio.label}
+                            </button>
+                        ))}
                     </div>
                     <div>
                         <label className="text-[10px] uppercase text-gray-400 font-semibold mb-1 block">Rotation (deg)</label>
