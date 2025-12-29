@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Screenshot Designer
+
+A powerful web-based tool for creating professional App Store and Play Store screenshots. Built with Next.js, Fabric.js, and Tailwind CSS.
+
+![App Overview](images/app-overview.png)
+
+## Features
+
+- **Device Frames**: High-quality vector frames for the latest devices:
+    - iPhone 16 Pro & Max
+    - Google Pixel 9
+    - Samsung Galaxy S24 Ultra
+    - iPad Pro 13"
+    - Android Tablet
+- **Smart Design Tools**:
+    - **Shapes**: Rectangle, Circle, Triangle, Polygon
+    - **Connectors**: Arrows and Lines for annotating flows
+    - **Text**: Rich text editing with various fonts and styles
+- **Canvas Management**:
+    - **Multi-Canvas Support**: Create, duplicate, and manage multiple screenshot designs in one session.
+    - **Presets**: One-click resizing for iOS (6.5", 5.5") and Android (Phone, 7" Tablet, 10" Tablet).
+    - **Custom Backgrounds**: Choose from preset colors or define custom HEX values.
+- **Export**: High-resolution PNG export for immediate store upload.
+- **Theme Support**: Fully responsive Light and Dark modes.
 
 ## Getting Started
 
-First, run the development server:
+Follow these instructions to set up the project locally.
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd ScreenshotGenerator
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+### Running Locally
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To create a production build:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Start the production server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## User Interface
 
-## Deploy on Vercel
+The application features a streamlined three-column layout:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1.  **Toolbox (Left Sidebar)**:
+    -   **Canvases**: Manage your distinct screenshot screens.
+    -   **Insert**: Drag and drop text, shapes, and device frames.
+    -   **Size**: Quickly switch between standard App Store and Play Store dimensions.
+    -   **Actions**: Save project state or Export final images.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2.  **Editor (Center)**:
+    -   The main workspace where you arrange your elements.
+    -   Includes zoom controls and "Fit to Screen" functionality for easy navigation.
+
+3.  **Properties (Right Sidebar)**:
+    -   **Canvas Settings**: When no object is selected, adjust canvas width, height, and background color.
+    -   **Object Settings**: When an object is selected, customize its properties (color, border, text style, etc.).
+
+## Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Directory)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Canvas Engine**: [Fabric.js](http://fabricjs.com/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Icons**: [Lucide React](https://lucide.dev/)
