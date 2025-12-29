@@ -36,8 +36,8 @@ Follow these instructions to set up the project locally.
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd ScreenshotGenerator
+   git clone https://github.com/juliuscanute/play-and-app-screenshots.git
+   cd play-and-app-screenshots
    ```
 
 2. Install dependencies:
